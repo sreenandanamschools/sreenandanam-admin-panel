@@ -38,6 +38,7 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
     address: '',
     qualification: '',
     experience_years: 0,
+    teacherid: '',
   })
 
   useEffect(() => {
@@ -68,7 +69,33 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
           address: data.address || '',
           qualification: data.qualification || '',
           experience_years: data.experience_years || 0,
+          teacherid: data.teacherid || '',
         })
+        // Auto-generate teacherid
+        const { data: existingTeachers } = await supabase
+          .from('teachers')
+          .select('teacherid')
+        
+        const currentYear = new Date().getFullYear()
+        const prefix = `T00${currentYear}`
+        let nextId = `${prefix}01`
+
+        if (existingTeachers && existingTeachers.length > 0) {
+          let maxSeq = 0
+          existingTeachers.forEach(t => {
+            if (t.teacherid && t.teacherid.startsWith(prefix)) {
+              const seqStr = t.teacherid.slice(prefix.length)
+              const seq = parseInt(seqStr, 10)
+              if (!isNaN(seq) && seq > maxSeq) {
+                maxSeq = seq
+              }
+            }
+          })
+          if (maxSeq > 0) {
+            nextId = `${prefix}${String(maxSeq + 1).padStart(2, '0')}`
+          }
+        }
+        setForm(f => ({ ...f, teacherid: nextId }))
       }
       setIsLoading(false)
     }
@@ -82,19 +109,19 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
 
     setIsSaving(true)
     try {
+      const payload = {
+        ...form,
+        date_of_birth: form.date_of_birth || null,
+        teacherid: form.teacherid.trim() || null,
+      }
+
       if (isNew) {
-        const { error } = await supabase.from('teachers').insert({
-          ...form,
-          date_of_birth: form.date_of_birth || null,
-        })
+        const { error } = await supabase.from('teachers').insert(payload)
         if (error) throw error
         toast.success('Teacher added successfully')
         router.push('/dashboard/teachers')
       } else {
-        const { error } = await supabase.from('teachers').update({
-          ...form,
-          date_of_birth: form.date_of_birth || null,
-        }).eq('id', id)
+        const { error } = await supabase.from('teachers').update(payload).eq('id', id)
         if (error) throw error
         toast.success('Teacher profile updated')
         router.push('/dashboard/teachers')
@@ -144,7 +171,18 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
                 onChange={(url) => setForm({ ...form, image_url: url })}
                 onRemove={() => setForm({ ...form, image_url: null })}
               />
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-4 border-t pt-4">
+                <h3 className="text-sm font-semibold text-slate-700">ID & System Details</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="teacherid">Teacher ID (unique)</Label>
+                  <Input 
+                    id="teacherid"
+                    value={form.teacherid} 
+                    onChange={e => setForm({...form, teacherid: e.target.value})} 
+                    placeholder="e.g. T00202601" 
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label>Join Date</Label>
                   <Input type="date" value={form.join_date} onChange={e => setForm({...form, join_date: e.target.value})} />

@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'School ERP Admin Panel',
+  title: 'Sreenandanam Admin Panel',
   description: 'Comprehensive school management system',
   generator: 'v0.app',
   icons: {

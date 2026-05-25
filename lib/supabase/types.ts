@@ -21,23 +21,21 @@ export interface Student {
   id: string
   admission_no: string
   full_name: string
-  class_id: string | null
-  academic_year_id: string | null
   parent_name: string | null
   phone: string | null
   email: string | null
   is_active: boolean
   created_at: string
-  image_url?: string | null
-  date_of_birth?: string | null
-  gender?: string | null
-  blood_group?: string | null
-  address?: string | null
-  emergency_contact?: string | null
+  image_url: string | null
+  date_of_birth: string | null
+  gender: 'Male' | 'Female' | 'Other' | null
+  blood_group: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-' | null
+  address: string | null
+  emergency_contact: string | null
+  updated_at: string | null
+  admission_date: string | null
   // Joined
-  classes?: Class | null
-  academic_years?: AcademicYear | null
-  student_enrollments?: any[] | null
+  student_enrollments?: StudentEnrollment[] | null
 }
 
 export interface StudentEnrollment {
@@ -47,7 +45,7 @@ export interface StudentEnrollment {
   class_id: string
   roll_no: string | null
   section: string | null
-  status: string
+  status: 'active' | 'promoted' | 'transferred' | 'left' | 'completed'
   joined_on: string
   promoted_from_enrollment_id: string | null
   remarks: string | null
@@ -67,12 +65,14 @@ export interface Teacher {
   subject: string
   join_date: string
   created_at: string
-  image_url?: string | null
-  date_of_birth?: string | null
-  gender?: string | null
-  address?: string | null
-  qualification?: string | null
-  experience_years?: number | null
+  image_url: string | null
+  date_of_birth: string | null
+  gender: string | null
+  address: string | null
+  qualification: string | null
+  experience_years: number | null
+  updated_at: string | null
+  teacherid: string | null
 }
 
 export interface Attendance {
@@ -84,78 +84,6 @@ export interface Attendance {
   created_at: string
 }
 
-export interface Exam {
-  id: string
-  name: string
-  class_id: string
-  subject: string
-  exam_date: string
-  total_marks: number
-  passing_marks: number
-  created_at: string
-  // Joined
-  classes?: Class | null
-}
-
-export interface FeeStructure {
-  id: string
-  name: string
-  academic_year_id: string | null
-  created_at: string
-  academic_years?: AcademicYear | null
-  fee_components?: FeeComponent[]
-}
-
-export interface FeeComponent {
-  id: string
-  fee_structure_id: string | null
-  component_name: string
-  amount: number
-  frequency: 'monthly' | 'term' | 'yearly' | 'one_time'
-  created_at: string
-}
-
-export interface StudentFeeAssignment {
-  id: string
-  student_id: string | null
-  fee_structure_id: string | null
-  discount_amount: number
-  assigned_at: string
-  students?: Student | null
-  fee_structures?: FeeStructure | null
-}
-
-export interface FeeInstallment {
-  id: string
-  student_fee_assignment_id: string | null
-  installment_name: string
-  due_date: string
-  amount: number
-  status: 'pending' | 'partial' | 'paid' | 'overdue'
-  created_at: string
-}
-
-export interface Payment {
-  id: string
-  student_id: string | null
-  installment_id: string | null
-  amount_paid: number
-  payment_method: 'cash' | 'upi' | 'bank_transfer' | 'card' | null
-  transaction_ref: string | null
-  paid_at: string
-  received_by: string | null
-  students?: Student | null
-  fee_installments?: FeeInstallment | null
-}
-
-export interface Receipt {
-  id: string
-  payment_id: string | null
-  receipt_no: string
-  pdf_url: string | null
-  created_at: string
-}
-
 export interface Announcement {
   id: string
   title: string
@@ -164,18 +92,7 @@ export interface Announcement {
   published_date: string
   created_by: string | null
   created_at: string
-  type: 'event' | 'announcement'
-}
-
-export interface Book {
-  id: string
-  title: string
-  author: string
-  isbn: string | null
-  total_copies: number
-  available_copies: number
-  status: 'Available' | 'Out of Stock'
-  created_at: string
+  updated_at: string | null
 }
 
 export interface GalleryItem {
@@ -196,6 +113,7 @@ export interface News {
   is_pinned: boolean
   published_at: string
   created_at: string
+  updated_at: string | null
 }
 
 export interface SchoolEvent {
@@ -213,7 +131,6 @@ export interface Career {
   name: string
   email: string
   phone: string
-  position: string
   cover_letter: string | null
   resume_url: string
   created_at: string

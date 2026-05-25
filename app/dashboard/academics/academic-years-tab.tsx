@@ -11,7 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Plus, Edit2, Trash2, Loader2, CalendarDays, CheckCircle2, Circle } from 'lucide-react'
+import { Plus, Edit2, Trash2, Loader2, CalendarDays, CheckCircle2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { AcademicYear } from '@/lib/supabase/types'
 
@@ -21,7 +21,7 @@ const EMPTY_FORM = {
   end_date: '',
 }
 
-export default function AcademicYearsPage() {
+export default function AcademicYearsTab() {
   const supabase = createClient()
 
   const [years, setYears] = useState<AcademicYear[]>([])
@@ -49,7 +49,7 @@ export default function AcademicYearsPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [supabase])
 
   useEffect(() => { fetchAll() }, [fetchAll])
 
@@ -114,7 +114,6 @@ export default function AcademicYearsPage() {
         name: form.name.trim(),
         start_date: form.start_date,
         end_date: form.end_date,
-        // is_active is no longer manually managed
       }
 
       if (editingId) {
@@ -133,8 +132,6 @@ export default function AcademicYearsPage() {
       setIsSaving(false)
     }
   }
-
-
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -158,8 +155,8 @@ export default function AcademicYearsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Academic Years</h1>
-          <p className="text-slate-600 mt-1">Manage academic sessions. Current year is auto-detected.</p>
+          <h2 className="text-xl font-semibold text-slate-900">Academic Sessions</h2>
+          <p className="text-sm text-slate-500 mt-1">Manage academic sessions. Current year is auto-detected.</p>
         </div>
         <Button className="gap-2" onClick={openAdd}>
           <Plus className="h-4 w-4" /> Add Academic Year
@@ -322,7 +319,6 @@ export default function AcademicYearsPage() {
                 onChange={e => handleDateChange('end_date', e.target.value)}
               />
             </div>
-
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <DialogFooter>

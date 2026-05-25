@@ -28,7 +28,7 @@ const EMPTY_FORM = {
   remarks: '',
 }
 
-export default function EnrollmentsPage() {
+export default function EnrollmentsTab() {
   const supabase = createClient()
 
   const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([])
@@ -159,8 +159,8 @@ export default function EnrollmentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Enrollments</h1>
-          <p className="text-slate-600 mt-1">Manage yearly student academic enrollments</p>
+          <h2 className="text-xl font-semibold text-slate-900">Student Enrollments</h2>
+          <p className="text-sm text-slate-500 mt-1">Manage yearly student academic enrollments</p>
         </div>
         <Button className="gap-2" onClick={openAdd}>
           <Plus className="h-4 w-4" /> New Enrollment

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { StudentEnrollment, AcademicYear, Class } from '@/lib/supabase/types'
 import { toast } from 'sonner'
 
-export default function PromotionsPage() {
+export default function PromotionsTab() {
   const supabase = createClient()
 
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([])
@@ -94,10 +94,8 @@ export default function PromotionsPage() {
 
     setIsPromoting(true)
     try {
-      // 1. Get the selected full enrollment records
       const selectedRecords = sourceEnrollments.filter(e => selectedEnrollmentIds.has(e.id))
 
-      // 2. Prepare new enrollment inserts
       const newEnrollments = selectedRecords.map(e => ({
         student_id: e.student_id,
         academic_year_id: targetYearId,
@@ -106,11 +104,9 @@ export default function PromotionsPage() {
         promoted_from_enrollment_id: e.id,
       }))
 
-      // 3. Insert new enrollments
       const { error: insErr } = await supabase.from('student_enrollments').insert(newEnrollments)
       if (insErr) throw insErr
 
-      // 4. Update old enrollments to 'promoted'
       const { error: updErr } = await supabase
         .from('student_enrollments')
         .update({ status: 'promoted' })
@@ -120,7 +116,6 @@ export default function PromotionsPage() {
 
       toast.success(`Successfully promoted ${selectedEnrollmentIds.size} students!`)
       
-      // Refresh source list
       setSourceEnrollments(prev => prev.filter(e => !selectedEnrollmentIds.has(e.id)))
       setSelectedEnrollmentIds(new Set())
     } catch (error: any) {
@@ -133,8 +128,8 @@ export default function PromotionsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Promotion Workflow</h1>
-        <p className="text-slate-600 mt-1">Bulk promote students to the next academic year without losing historical data</p>
+        <h2 className="text-xl font-semibold text-slate-900">Promotion Workflow</h2>
+        <p className="text-sm text-slate-500 mt-1">Bulk promote students to the next academic year without losing historical data</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">

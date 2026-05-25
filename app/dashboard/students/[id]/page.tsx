@@ -30,6 +30,10 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([])
 
   // Form State
+  // Initial enrollment fields (only used when creating new students)
+  const [initialClassId, setInitialClassId] = useState('')
+  const [initialYearId, setInitialYearId] = useState('')
+
   const [form, setForm] = useState({
     admission_no: '',
     full_name: '',
@@ -43,9 +47,6 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
     address: '',
     emergency_contact: '',
     is_active: true,
-    // Legacy fields for initial setup (handled via enrollments ideally, but keeping here for simple onboarding)
-    class_id: '',
-    academic_year_id: '',
   })
 
   useEffect(() => {
@@ -85,9 +86,32 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
           address: data.address || '',
           emergency_contact: data.emergency_contact || '',
           is_active: data.is_active,
-          class_id: data.class_id || '',
-          academic_year_id: data.academic_year_id || '',
         })
+        // Auto-generate admission_no
+        const { data: existingStudents } = await supabase
+          .from('students')
+          .select('admission_no')
+        
+        const currentYear = new Date().getFullYear()
+        const prefix = `S00${currentYear}`
+        let nextNo = `${prefix}01`
+
+        if (existingStudents && existingStudents.length > 0) {
+          let maxSeq = 0
+          existingStudents.forEach(s => {
+            if (s.admission_no && s.admission_no.startsWith(prefix)) {
+              const seqStr = s.admission_no.slice(prefix.length)
+              const seq = parseInt(seqStr, 10)
+              if (!isNaN(seq) && seq > maxSeq) {
+                maxSeq = seq
+              }
+            }
+          })
+          if (maxSeq > 0) {
+            nextNo = `${prefix}${String(maxSeq + 1).padStart(2, '0')}`
+          }
+        }
+        setForm(f => ({ ...f, admission_no: nextNo }))
       }
       setIsLoading(false)
     }
@@ -104,13 +128,23 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
       const payload = {
         ...form,
         date_of_birth: form.date_of_birth || null,
-        class_id: form.class_id || null,
-        academic_year_id: form.academic_year_id || null,
       }
 
       if (isNew) {
-        const { error } = await supabase.from('students').insert(payload)
+        const { data: newStudent, error } = await supabase.from('students').insert(payload).select('id').single()
         if (error) throw error
+
+        // Create initial enrollment if class and year are selected
+        if (initialClassId && initialYearId && newStudent) {
+          const { error: enrollErr } = await supabase.from('student_enrollments').insert({
+            student_id: newStudent.id,
+            class_id: initialClassId,
+            academic_year_id: initialYearId,
+            status: 'active',
+          })
+          if (enrollErr) throw enrollErr
+        }
+
         toast.success('Student created successfully')
         router.push('/dashboard/students')
       } else {
@@ -164,7 +198,19 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
                 onChange={(url) => setForm({ ...form, image_url: url })}
                 onRemove={() => setForm({ ...form, image_url: null })}
               />
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-4 border-t pt-4">
+                <h3 className="text-sm font-semibold text-slate-700">ID & System Details</h3>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="admission_no">Admission Number (Student ID) *</Label>
+                  <Input 
+                    id="admission_no"
+                    value={form.admission_no} 
+                    onChange={e => setForm({...form, admission_no: e.target.value})} 
+                    placeholder="e.g. S00202601" 
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <Select 
@@ -246,19 +292,18 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
                   <p className="text-sm text-slate-500">Note: Yearly progression should be managed via the Enrollments module.</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Admission Number *</Label>
-                      <Input value={form.admission_no} onChange={e => setForm({...form, admission_no: e.target.value})} placeholder="e.g. ADM-2026-001" />
-                    </div>
-                  </div>
+                  {!isNew && (
+                    <p className="text-sm text-slate-600">
+                      Admission Number: <strong className="font-semibold">{form.admission_no}</strong> (Managed in ID & System Details)
+                    </p>
+                  )}
                   
                   {isNew && (
                     <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-blue-50/50 rounded-lg border border-blue-100">
                       <div className="col-span-2"><Label className="text-blue-800">Initial Enrollment Assignment</Label></div>
                       <div className="space-y-2">
                         <Label>Joining Academic Year</Label>
-                        <Select value={form.academic_year_id} onValueChange={v => setForm({...form, academic_year_id: v})}>
+                        <Select value={initialYearId} onValueChange={setInitialYearId}>
                           <SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger>
                           <SelectContent>
                             {academicYears.map(y => <SelectItem key={y.id} value={y.id}>{y.name}</SelectItem>)}
@@ -267,7 +312,7 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
                       </div>
                       <div className="space-y-2">
                         <Label>Joining Class</Label>
-                        <Select value={form.class_id} onValueChange={v => setForm({...form, class_id: v})}>
+                        <Select value={initialClassId} onValueChange={setInitialClassId}>
                           <SelectTrigger><SelectValue placeholder="Select Class" /></SelectTrigger>
                           <SelectContent>
                             {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.class_name} {c.section || ''}</SelectItem>)}

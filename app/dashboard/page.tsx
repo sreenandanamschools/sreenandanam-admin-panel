@@ -271,10 +271,10 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               className="h-auto py-3 flex flex-col gap-2"
-              onClick={() => router.push('/dashboard/fees')}
+              onClick={() => router.push('/dashboard/reports')}
             >
-              <IndianRupee className="h-6 w-6 text-slate-700" />
-              <span className="text-sm">Collect Fee</span>
+              <TrendingUp className="h-6 w-6 text-slate-700" />
+              <span className="text-sm">View Reports</span>
             </Button>
             <Button
               variant="outline"

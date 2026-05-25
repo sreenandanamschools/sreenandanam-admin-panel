@@ -12,9 +12,25 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Edit2, Trash2, Plus, Search, Loader2, User } from 'lucide-react'
+import { Edit2, Trash2, Plus, Search, Loader2, User, Upload } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Teacher } from '@/lib/supabase/types'
+import { CSVImportDialog, type ColumnDef } from '@/components/csv-import-dialog'
+
+const TEACHER_CSV_COLUMNS: ColumnDef[] = [
+  { key: 'first_name', label: 'First Name', required: true, example: 'Priya' },
+  { key: 'last_name', label: 'Last Name', required: true, example: 'Nair' },
+  { key: 'email', label: 'Email', required: true, example: 'priya.nair@school.com' },
+  { key: 'subject', label: 'Subject', required: true, example: 'Mathematics' },
+  { key: 'phone', label: 'Phone', required: false, example: '9876543210' },
+  { key: 'join_date', label: 'Join Date', required: false, example: '2024-06-01' },
+  { key: 'date_of_birth', label: 'Date of Birth', required: false, example: '1990-03-20' },
+  { key: 'gender', label: 'Gender', required: false, example: 'Female' },
+  { key: 'address', label: 'Address', required: false, example: '45 Beach Road, Kochi' },
+  { key: 'qualification', label: 'Qualification', required: false, example: 'M.Sc Mathematics' },
+  { key: 'experience_years', label: 'Experience (Years)', required: false, example: '5' },
+  { key: 'teacherid', label: 'Teacher ID', required: false, example: 'T00202601' },
+]
 
 export default function TeachersPage() {
   const supabase = createClient()
@@ -28,6 +44,7 @@ export default function TeachersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [csvDialogOpen, setCsvDialogOpen] = useState(false)
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true)
@@ -81,10 +98,16 @@ export default function TeachersPage() {
           <h1 className="text-3xl font-bold text-slate-900">Teachers</h1>
           <p className="text-slate-600 mt-1">Manage teaching staff</p>
         </div>
-        <Button className="gap-2" onClick={() => router.push('/dashboard/teachers/new')}>
-          <Plus className="h-4 w-4" />
-          Add Teacher
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setCsvDialogOpen(true)}>
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button className="gap-2" onClick={() => router.push('/dashboard/teachers/new')}>
+            <Plus className="h-4 w-4" />
+            Add Teacher
+          </Button>
+        </div>
       </div>
 
       {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
@@ -225,6 +248,30 @@ export default function TeachersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* CSV Import Dialog */}
+      <CSVImportDialog
+        open={csvDialogOpen}
+        onOpenChange={setCsvDialogOpen}
+        columns={TEACHER_CSV_COLUMNS}
+        tableName="teachers"
+        entityName="Teachers"
+        transformRow={(row) => ({
+          first_name: row.first_name,
+          last_name: row.last_name,
+          email: row.email,
+          subject: row.subject,
+          phone: row.phone || null,
+          join_date: row.join_date || new Date().toISOString().split('T')[0],
+          date_of_birth: row.date_of_birth || null,
+          gender: row.gender || null,
+          address: row.address || null,
+          qualification: row.qualification || null,
+          experience_years: row.experience_years ? parseInt(row.experience_years, 10) : 0,
+          teacherid: row.teacherid || null,
+        })}
+        onSuccess={fetchAll}
+      />
     </div>
   )
 }
