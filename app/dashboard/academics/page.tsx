@@ -1,12 +1,13 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
+import { Suspense } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import AcademicYearsTab from './academic-years-tab'
 import EnrollmentsTab from './enrollments-tab'
 import PromotionsTab from './promotions-tab'
 
-export default function AcademicsPage() {
+function AcademicsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const tab = searchParams.get('tab') || 'years'
@@ -42,3 +43,19 @@ export default function AcademicsPage() {
     </div>
   )
 }
+
+export default function AcademicsPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Academics</h1>
+          <p className="text-slate-600 mt-1">Loading academic management...</p>
+        </div>
+      </div>
+    }>
+      <AcademicsContent />
+    </Suspense>
+  )
+}
+
