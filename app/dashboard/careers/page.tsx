@@ -9,9 +9,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Trash2, Loader2, Briefcase, ExternalLink, Mail, Phone } from 'lucide-react'
+import { Trash2, Loader2, Briefcase, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Career } from '@/lib/supabase/types'
+import { toast } from 'sonner'
 
 export default function CareersPage() {
   const supabase = createClient()
@@ -21,7 +22,6 @@ export default function CareersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [viewItem, setViewItem] = useState<Career | null>(null)
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true); setError(null)
@@ -42,8 +42,33 @@ export default function CareersPage() {
       const { error } = await supabase.from('careers').delete().eq('id', deleteId)
       if (error) throw error
       setDeleteDialogOpen(false); setDeleteId(null); await fetchAll()
+      toast.success("Application deleted")
     } catch (e: any) { setError(e.message) }
     finally { setIsDeleting(false) }
+  }
+
+  const openResume = async (path: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    try {
+      // Legacy check: if it's already a full URL, open directly
+      if (path.startsWith('http://') || path.startsWith('https://')) {
+        window.open(path, '_blank')
+        return
+      }
+
+      // Generate a signed URL valid for 60 seconds
+      const { data, error } = await supabase.storage
+        .from('resumes')
+        .createSignedUrl(path, 60)
+
+      if (error) throw error
+      
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, '_blank')
+      }
+    } catch (err: any) {
+      toast.error('Failed to open resume: ' + err.message)
+    }
   }
 
   return (
@@ -80,7 +105,7 @@ export default function CareersPage() {
                 </TableHeader>
                 <TableBody>
                   {items.map(c => (
-                    <TableRow key={c.id} className="cursor-pointer hover:bg-slate-50" onClick={() => setViewItem(c)}>
+                    <TableRow key={c.id} className="hover:bg-slate-50">
                       <TableCell className="font-medium">{c.name}</TableCell>
                       <TableCell className="text-sm text-slate-600">{c.email}</TableCell>
                       <TableCell className="text-sm text-slate-600">{c.phone}</TableCell>
@@ -88,12 +113,12 @@ export default function CareersPage() {
                         {new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </TableCell>
                       <TableCell>
-                        <a href={c.resume_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium" onClick={e => e.stopPropagation()}>
+                        <button onClick={e => openResume(c.resume_url, e)} className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium">
                           <ExternalLink className="h-3.5 w-3.5" /> View
-                        </a>
+                        </button>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={e => { e.stopPropagation(); setDeleteId(c.id); setDeleteDialogOpen(true) }}>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button variant="ghost" size="sm" className="text-slate-600 hover:text-red-600" onClick={() => { setDeleteId(c.id); setDeleteDialogOpen(true) }} title="Delete">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -105,42 +130,6 @@ export default function CareersPage() {
           )}
         </CardContent>
       </Card>
-
-      {/* View Dialog */}
-      <Dialog open={!!viewItem} onOpenChange={() => setViewItem(null)}>
-        <DialogContent aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Application Details</DialogTitle></DialogHeader>
-          {viewItem && (
-            <div className="space-y-4 py-2">
-              <div>
-                <p className="text-sm text-slate-500">Name</p>
-                <p className="font-medium text-slate-900">{viewItem.name}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-slate-500">Email</p>
-                  <a href={`mailto:${viewItem.email}`} className="font-medium text-blue-600 flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{viewItem.email}</a>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Phone</p>
-                  <a href={`tel:${viewItem.phone}`} className="font-medium text-blue-600 flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{viewItem.phone}</a>
-                </div>
-              </div>
-              {viewItem.cover_letter && (
-                <div>
-                  <p className="text-sm text-slate-500 mb-1">Cover Letter</p>
-                  <p className="text-slate-700 whitespace-pre-wrap text-sm bg-slate-50 p-3 rounded-lg">{viewItem.cover_letter}</p>
-                </div>
-              )}
-              <div>
-                <a href={viewItem.resume_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors">
-                  <ExternalLink className="h-4 w-4" /> Open Resume
-                </a>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -14,6 +14,8 @@ import { ArrowLeft, Loader2, Save } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { toast } from 'sonner'
+import { IDCardPreview } from '@/components/id-card/IDCardPreview'
+import type { IDCardData, IDCardSettings } from '@/components/id-card/types'
 
 export default function TeacherProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -43,6 +45,34 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
 
   useEffect(() => {
     async function loadData() {
+      // Helper to generate next teacher ID
+      const generateNextTeacherId = async () => {
+        const { data: existingTeachers } = await supabase
+          .from('teachers')
+          .select('teacherid')
+        
+        const currentYear = new Date().getFullYear()
+        const prefix = `T00${currentYear}`
+        let nextId = `${prefix}01`
+
+        if (existingTeachers && existingTeachers.length > 0) {
+          let maxSeq = 0
+          existingTeachers.forEach(t => {
+            if (t.teacherid && t.teacherid.startsWith(prefix)) {
+              const seqStr = t.teacherid.slice(prefix.length)
+              const seq = parseInt(seqStr, 10)
+              if (!isNaN(seq) && seq > maxSeq) {
+                maxSeq = seq
+              }
+            }
+          })
+          if (maxSeq > 0) {
+            nextId = `${prefix}${String(maxSeq + 1).padStart(2, '0')}`
+          }
+        }
+        return nextId
+      }
+
       if (!isNew) {
         const { data, error } = await supabase
           .from('teachers')
@@ -71,30 +101,13 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
           experience_years: data.experience_years || 0,
           teacherid: data.teacherid || '',
         })
-        // Auto-generate teacherid
-        const { data: existingTeachers } = await supabase
-          .from('teachers')
-          .select('teacherid')
-        
-        const currentYear = new Date().getFullYear()
-        const prefix = `T00${currentYear}`
-        let nextId = `${prefix}01`
 
-        if (existingTeachers && existingTeachers.length > 0) {
-          let maxSeq = 0
-          existingTeachers.forEach(t => {
-            if (t.teacherid && t.teacherid.startsWith(prefix)) {
-              const seqStr = t.teacherid.slice(prefix.length)
-              const seq = parseInt(seqStr, 10)
-              if (!isNaN(seq) && seq > maxSeq) {
-                maxSeq = seq
-              }
-            }
-          })
-          if (maxSeq > 0) {
-            nextId = `${prefix}${String(maxSeq + 1).padStart(2, '0')}`
-          }
+        if (!data.teacherid) {
+          const nextId = await generateNextTeacherId()
+          setForm(f => ({ ...f, teacherid: nextId }))
         }
+      } else {
+        const nextId = await generateNextTeacherId()
         setForm(f => ({ ...f, teacherid: nextId }))
       }
       setIsLoading(false)
@@ -137,8 +150,31 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
     return <div className="flex h-96 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-slate-400" /></div>
   }
 
+  const idCardData: IDCardData = {
+    schoolName: "Sreenandanam Public School",
+    schoolAddress: "",
+    schoolPhone: "",
+    schoolEmail: "",
+    establishedYear: "",
+    studentName: `${form.first_name} ${form.last_name}`.trim() || "Teacher Name",
+    studentPhoto: form.image_url || "",
+    grade: "Staff",
+    stream: form.subject || "Subject",
+    idNumber: form.teacherid || "Teacher ID",
+    academicYear: "", // or format join date
+    bloodGroup: "-", // Teacher table doesn't have blood group yet
+    expiryDate: "",
+  }
+
+  const idCardSettings: IDCardSettings = {
+    themeColor: "#1aaa85",
+    showBack: false,
+    cardSize: "CR80",
+    fontFamily: "Inter, sans-serif",
+  }
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-10">
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -160,143 +196,160 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Avatar & Quick Status */}
-        <div className="space-y-6">
-          <Card>
-            <CardContent className="pt-6">
-              <ImageUpload 
-                folder="teachers"
-                value={form.image_url} 
-                onChange={(url) => setForm({ ...form, image_url: url })}
-                onRemove={() => setForm({ ...form, image_url: null })}
-              />
-              <div className="mt-6 space-y-4 border-t pt-4">
-                <h3 className="text-sm font-semibold text-slate-700">ID & System Details</h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="teacherid">Teacher ID (unique)</Label>
-                  <Input 
-                    id="teacherid"
-                    value={form.teacherid} 
-                    onChange={e => setForm({...form, teacherid: e.target.value})} 
-                    placeholder="e.g. T00202601" 
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Join Date</Label>
-                  <Input type="date" value={form.join_date} onChange={e => setForm({...form, join_date: e.target.value})} />
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: ID Card Preview */}
+        <div className="space-y-6 lg:col-span-6">
+          <Card className="sticky top-6">
+            <CardHeader className="pb-3 text-center border-b border-gray-100">
+              <CardTitle className="text-sm font-semibold text-gray-500 uppercase tracking-wider">ID Card Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center gap-4 pt-6 pb-6 bg-gray-50/50 rounded-b-xl overflow-hidden">
+              <div className="flex flex-col items-center scale-[0.85] origin-center -mx-4">
+                <IDCardPreview data={idCardData} settings={idCardSettings} isBack={false} />
+              </div>
+              <div className="flex flex-col items-center scale-[0.85] origin-center -mx-4">
+                <IDCardPreview data={idCardData} settings={idCardSettings} isBack={true} />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Right Column: Detailed Forms */}
-        <div className="md:col-span-2">
-          <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="personal">Personal Info</TabsTrigger>
-              <TabsTrigger value="professional">Professional</TabsTrigger>
-              <TabsTrigger value="contact">Contact & Address</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="personal" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Personal Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>First Name *</Label>
-                      <Input value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} placeholder="John" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Last Name *</Label>
-                      <Input value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} placeholder="Doe" />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Gender</Label>
-                      <Select value={form.gender} onValueChange={v => setForm({...form, gender: v})}>
-                        <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Male">Male</SelectItem>
-                          <SelectItem value="Female">Female</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Date of Birth</Label>
-                      <Input type="date" value={form.date_of_birth} onChange={e => setForm({...form, date_of_birth: e.target.value})} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="professional" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Academic & Professional</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                      <Label>Primary Subject *</Label>
-                      <Input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder="e.g. Mathematics" />
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Highest Qualification</Label>
-                      <Input value={form.qualification} onChange={e => setForm({...form, qualification: e.target.value})} placeholder="e.g. M.Sc, B.Ed" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Experience (Years)</Label>
-                      <Input 
-                        type="number" 
-                        value={form.experience_years} 
-                        onChange={e => setForm({...form, experience_years: parseInt(e.target.value) || 0})} 
-                        min="0" 
+        <div className="lg:col-span-6">
+            <Tabs defaultValue="personal" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="personal">Personal Info</TabsTrigger>
+                <TabsTrigger value="professional">Professional</TabsTrigger>
+                <TabsTrigger value="contact">Contact & Address</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="personal" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Personal Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-8">
+                    {/* Avatar Upload */}
+                    <div className="flex justify-center border-b pb-6">
+                      <ImageUpload 
+                        folder="teachers"
+                        value={form.image_url} 
+                        onChange={(url) => setForm({ ...form, image_url: url })}
+                        onRemove={() => setForm({ ...form, image_url: null })}
                       />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
-            <TabsContent value="contact" className="mt-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Contact Information</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Email Address *</Label>
-                      <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="teacher@example.com" />
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                      {/* System Details Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">System Details</h3>
+                        <div className="space-y-2 pt-2">
+                          <Label htmlFor="teacherid">Teacher ID (unique)</Label>
+                          <Input 
+                            id="teacherid"
+                            value={form.teacherid} 
+                            onChange={e => setForm({...form, teacherid: e.target.value})} 
+                            placeholder="e.g. T00202601" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Join Date</Label>
+                          <Input type="date" value={form.join_date} onChange={e => setForm({...form, join_date: e.target.value})} />
+                        </div>
+                      </div>
+
+                      {/* Personal Details Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">Personal Details</h3>
+                        <div className="space-y-2 pt-2">
+                          <Label>First Name *</Label>
+                          <Input value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} placeholder="John" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Last Name *</Label>
+                          <Input value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} placeholder="Doe" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Gender</Label>
+                            <Select value={form.gender} onValueChange={v => setForm({...form, gender: v})}>
+                              <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Date of Birth</Label>
+                            <Input type="date" value={form.date_of_birth} onChange={e => setForm({...form, date_of_birth: e.target.value})} />
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Phone Number</Label>
-                      <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+1 234 567 8900" />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="professional" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Academic & Professional</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label>Primary Subject *</Label>
+                        <Input value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} placeholder="e.g. Mathematics" />
+                      </div>
                     </div>
-                  </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Highest Qualification</Label>
+                        <Input value={form.qualification} onChange={e => setForm({...form, qualification: e.target.value})} placeholder="e.g. M.Sc, B.Ed" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Experience (Years)</Label>
+                        <Input 
+                          type="number" 
+                          value={form.experience_years} 
+                          onChange={e => setForm({...form, experience_years: parseInt(e.target.value) || 0})} 
+                          min="0" 
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                  <div className="space-y-2">
-                    <Label>Residential Address</Label>
-                    <Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="123 Main St, City, Country" />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+              <TabsContent value="contact" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Contact Information</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Email Address *</Label>
+                        <Input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="teacher@example.com" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone Number</Label>
+                        <Input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} placeholder="+1 234 567 8900" />
+                      </div>
+                    </div>
 
-          </Tabs>
+                    <div className="space-y-2">
+                      <Label>Residential Address</Label>
+                      <Input value={form.address} onChange={e => setForm({...form, address: e.target.value})} placeholder="123 Main St, City, Country" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+            </Tabs>
         </div>
       </div>
     </div>

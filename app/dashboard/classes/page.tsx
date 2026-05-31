@@ -45,15 +45,15 @@ export default function ClassesPage() {
         .order('class_name')
       if (cErr) throw cErr
 
-      // Count students per class
-      const { data: counts } = await supabase
-        .from('students')
+      // Count students per class via active enrollments
+      const { data: enrollments } = await supabase
+        .from('student_enrollments')
         .select('class_id')
-        .eq('is_active', true)
+        .eq('status', 'active')
 
       const countMap: Record<string, number> = {}
-      counts?.forEach(s => {
-        if (s.class_id) countMap[s.class_id] = (countMap[s.class_id] || 0) + 1
+      enrollments?.forEach(e => {
+        if (e.class_id) countMap[e.class_id] = (countMap[e.class_id] || 0) + 1
       })
 
       setClasses((classesData || []).map(c => ({ ...c, student_count: countMap[c.id] || 0 })))

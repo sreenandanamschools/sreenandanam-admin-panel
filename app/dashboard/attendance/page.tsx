@@ -54,36 +54,42 @@ export default function AttendancePage() {
     setError(null)
     setSaveSuccess(false)
     try {
-      const [{ data: studentsData, error: sErr }, { data: attendanceData }] = await Promise.all([
-        supabase
-          .from('students')
-          .select('id, full_name, admission_no')
-          .eq('class_id', selectedClassId)
-          .eq('is_active', true)
-          .order('full_name'),
-        supabase
+      const { data: enrollmentsData, error: eErr } = await supabase
+        .from('student_enrollments')
+        .select(`
+          student_id,
+          students!inner (id, full_name, admission_no)
+        `)
+        .eq('class_id', selectedClassId)
+        .eq('status', 'active');
+
+      if (eErr) throw eErr;
+
+      const studentsList = (enrollmentsData || []).map((e: any) => e.students).filter(Boolean);
+      studentsList.sort((a, b) => a.full_name.localeCompare(b.full_name));
+      const studentIds = studentsList.map(s => s.id);
+
+      let attendanceData: any[] = [];
+      if (studentIds.length > 0) {
+        const { data: attData } = await supabase
           .from('attendance')
           .select('student_id, status')
           .eq('date', selectedDate)
-          .in(
-            'student_id',
-            // We'll re-query after getting students — pre-fetch for the class via subquery approach
-            (await supabase.from('students').select('id').eq('class_id', selectedClassId)).data?.map(s => s.id) || []
-          ),
-      ])
-      if (sErr) throw sErr
+          .in('student_id', studentIds);
+        attendanceData = attData || [];
+      }
 
-      setStudents((studentsData as Student[]) || [])
+      setStudents(studentsList as Student[]);
 
       const map: Record<string, AttendanceStatus> = {}
-      attendanceData?.forEach(a => { map[a.student_id] = a.status as AttendanceStatus })
+      attendanceData.forEach(a => { map[a.student_id] = a.status as AttendanceStatus })
       setAttendance(map)
     } catch (e: any) {
       setError(e.message)
     } finally {
       setIsLoadingStudents(false)
     }
-  }, [selectedClassId, selectedDate])
+  }, [selectedClassId, selectedDate, supabase])
 
   useEffect(() => { loadStudentsAndAttendance() }, [loadStudentsAndAttendance])
 

@@ -36,8 +36,10 @@ import {
   Loader2,
   User,
   Upload,
-  Download,
+  IdCard,
+  Link,
 } from "lucide-react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import type { Student, Class, AcademicYear } from "@/lib/supabase/types";
 import {
@@ -168,6 +170,15 @@ export default function StudentsPage() {
     }
   };
 
+  const copyQrLink = (student: Student) => {
+    const baseUrl = "https://sreenandanam-school-website.vercel.app";
+    // Use studentid if available, fallback to admission_no for the unique identifier in the link
+    const idToUse = (student as any).studentid || student.admission_no;
+    const link = `${baseUrl}/s/id-card/student/${encodeURIComponent(idToUse)}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Student QR Link copied!");
+  };
+
   const filtered = students.filter((s) => {
     const matchSearch =
       s.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -192,62 +203,6 @@ export default function StudentsPage() {
     return c.section ? `${c.class_name} ${c.section}` : c.class_name;
   };
 
-  const handleExportCSV = () => {
-    if (filtered.length === 0) return;
-    
-    // Headers for ID card generation
-    const headers = [
-      "Admission No",
-      "Full Name",
-      "Class",
-      "Date of Birth",
-      "Blood Group",
-      "Parent Name",
-      "Phone",
-      "Emergency Contact",
-      "Address",
-      "Image URL"
-    ];
-    
-    const csvRows = [headers.join(",")];
-    
-    filtered.forEach((student) => {
-      // Helper to escape quotes and handle commas in fields
-      const escapeField = (field: any) => {
-        if (field === null || field === undefined) return '""';
-        const stringField = String(field);
-        if (stringField.includes('"') || stringField.includes(',')) {
-          return `"${stringField.replace(/"/g, '""')}"`;
-        }
-        return stringField;
-      };
-
-      const row = [
-        escapeField(student.admission_no),
-        escapeField(student.full_name),
-        escapeField(getClassName(student)),
-        escapeField(student.date_of_birth),
-        escapeField(student.blood_group),
-        escapeField(student.parent_name),
-        escapeField(student.phone),
-        escapeField(student.emergency_contact),
-        escapeField(student.address),
-        escapeField(student.image_url),
-      ];
-      csvRows.push(row.join(","));
-    });
-    
-    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "student_id_cards.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -262,10 +217,10 @@ export default function StudentsPage() {
           <Button
             variant="outline"
             className="gap-2"
-            onClick={handleExportCSV}
+            onClick={() => router.push("/dashboard/students/id-cards")}
           >
-            <Download className="h-4 w-4" />
-            Export ID Cards (CSV)
+            <IdCard className="h-4 w-4" />
+            ID Cards
           </Button>
           <Button
             variant="outline"
@@ -398,17 +353,24 @@ export default function StudentsPage() {
                       <TableCell>{student.phone || "—"}</TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            student.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-slate-100 text-slate-600"
-                          }`}
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${student.is_active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-slate-100 text-slate-600"
+                            }`}
                         >
                           {student.is_active ? "Active" : "Inactive"}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Copy QR Link"
+                            onClick={() => copyQrLink(student)}
+                          >
+                            <Link className="h-4 w-4 text-blue-600" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"

@@ -34,6 +34,7 @@ export interface Student {
   emergency_contact: string | null
   updated_at: string | null
   admission_date: string | null
+  studentid: string | null
   // Joined
   student_enrollments?: StudentEnrollment[] | null
 }

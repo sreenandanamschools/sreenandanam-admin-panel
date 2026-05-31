@@ -12,10 +12,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import { Edit2, Trash2, Plus, Search, Loader2, User, Upload } from 'lucide-react'
+import { Edit2, Trash2, Plus, Search, Loader2, User, Upload, Link } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Teacher } from '@/lib/supabase/types'
 import { CSVImportDialog, type ColumnDef } from '@/components/csv-import-dialog'
+import { toast } from 'sonner'
 
 const TEACHER_CSV_COLUMNS: ColumnDef[] = [
   { key: 'first_name', label: 'First Name', required: true, example: 'Priya' },
@@ -81,6 +82,15 @@ export default function TeachersPage() {
     }
   }
 
+  const copyQrLink = (teacher: Teacher) => {
+    const baseUrl = "https://sreenandanam-school-website.vercel.app";
+    // Use teacherid if available, fallback to id for the unique identifier in the link
+    const idToUse = teacher.teacherid || teacher.id;
+    const link = `${baseUrl}/s/id-card/teacher/${encodeURIComponent(idToUse)}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Teacher QR Link copied!");
+  };
+
   const filtered = teachers.filter(t => {
     const name = `${t.first_name} ${t.last_name}`.toLowerCase()
     return name.includes(search.toLowerCase()) ||
@@ -112,37 +122,7 @@ export default function TeachersPage() {
 
       {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Teachers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{teachers.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Subjects Covered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{subjects.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Newest Member</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-bold truncate">
-              {teachers.length > 0
-                ? `${teachers[0].first_name} ${teachers[0].last_name}`
-                : '—'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {/* Search */}
       <Card>
@@ -210,6 +190,14 @@ export default function TeachersPage() {
                       <TableCell>{teacher.join_date}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title="Copy QR Link"
+                            onClick={() => copyQrLink(teacher)}
+                          >
+                            <Link className="h-4 w-4 text-blue-600" />
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/teachers/${teacher.id}`)}>
                             <Edit2 className="h-4 w-4" />
                           </Button>
