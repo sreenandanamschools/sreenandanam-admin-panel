@@ -36,6 +36,7 @@ import {
   Loader2,
   User,
   Upload,
+  Download,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Student, Class, AcademicYear } from "@/lib/supabase/types";
@@ -191,6 +192,62 @@ export default function StudentsPage() {
     return c.section ? `${c.class_name} ${c.section}` : c.class_name;
   };
 
+  const handleExportCSV = () => {
+    if (filtered.length === 0) return;
+    
+    // Headers for ID card generation
+    const headers = [
+      "Admission No",
+      "Full Name",
+      "Class",
+      "Date of Birth",
+      "Blood Group",
+      "Parent Name",
+      "Phone",
+      "Emergency Contact",
+      "Address",
+      "Image URL"
+    ];
+    
+    const csvRows = [headers.join(",")];
+    
+    filtered.forEach((student) => {
+      // Helper to escape quotes and handle commas in fields
+      const escapeField = (field: any) => {
+        if (field === null || field === undefined) return '""';
+        const stringField = String(field);
+        if (stringField.includes('"') || stringField.includes(',')) {
+          return `"${stringField.replace(/"/g, '""')}"`;
+        }
+        return stringField;
+      };
+
+      const row = [
+        escapeField(student.admission_no),
+        escapeField(student.full_name),
+        escapeField(getClassName(student)),
+        escapeField(student.date_of_birth),
+        escapeField(student.blood_group),
+        escapeField(student.parent_name),
+        escapeField(student.phone),
+        escapeField(student.emergency_contact),
+        escapeField(student.address),
+        escapeField(student.image_url),
+      ];
+      csvRows.push(row.join(","));
+    });
+    
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "student_id_cards.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -202,6 +259,14 @@ export default function StudentsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleExportCSV}
+          >
+            <Download className="h-4 w-4" />
+            Export ID Cards (CSV)
+          </Button>
           <Button
             variant="outline"
             className="gap-2"
