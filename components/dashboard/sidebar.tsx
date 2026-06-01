@@ -39,7 +39,7 @@ const navItems = [
   { label: "Events", href: "/dashboard/events", icon: Calendar },
   { label: "News", href: "/dashboard/news", icon: Newspaper },
   { label: "Gallery", href: "/dashboard/gallery", icon: ImageIcon },
-  { label: "Famous Visitors", href: "/dashboard/famous-visitors", icon: Star },
+  { label: "Honorary Guests", href: "/dashboard/honorary-guests", icon: Star },
   { label: "Careers", href: "/dashboard/careers", icon: Briefcase },
   { label: "Reports", href: "/dashboard/reports", icon: BarChart3 },
 ];

@@ -137,7 +137,7 @@ export interface Career {
   created_at: string
 }
 
-export interface FamousVisitor {
+export interface HonoraryGuests {
   id: string
   name: string
   designation: string
