@@ -12,11 +12,12 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Plus, Edit2, Trash2, Loader2, CalendarDays, MapPin, Clock } from 'lucide-react'
+import { Plus, Edit2, Trash2, Loader2, CalendarDays, MapPin, Clock, Image as ImageIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { SchoolEvent } from '@/lib/supabase/types'
+import { ImageUpload } from '@/components/ui/image-upload'
 
-const EMPTY_FORM = { title: '', event_date: '', event_time: '', location: '', description: '' }
+const EMPTY_FORM = { title: '', event_date: '', event_time: '', location: '', description: '', image_url: '' }
 
 export default function EventsPage() {
   const supabase = createClient()
@@ -45,7 +46,7 @@ export default function EventsPage() {
   const openAdd = () => { setEditingId(null); setForm(EMPTY_FORM); setError(null); setDialogOpen(true) }
   const openEdit = (ev: SchoolEvent) => {
     setEditingId(ev.id)
-    setForm({ title: ev.title, event_date: ev.event_date, event_time: ev.event_time, location: ev.location, description: ev.description || '' })
+    setForm({ title: ev.title, event_date: ev.event_date, event_time: ev.event_time, location: ev.location, description: ev.description || '', image_url: ev.image_url || '' })
     setError(null); setDialogOpen(true)
   }
 
@@ -53,7 +54,7 @@ export default function EventsPage() {
     if (!form.title.trim() || !form.event_date || !form.event_time || !form.location.trim()) return
     setIsSaving(true); setError(null)
     try {
-      const payload = { title: form.title.trim(), event_date: form.event_date, event_time: form.event_time, location: form.location.trim(), description: form.description.trim() || null }
+      const payload = { title: form.title.trim(), event_date: form.event_date, event_time: form.event_time, location: form.location.trim(), description: form.description.trim() || null, image_url: form.image_url.trim() || null }
       if (editingId) {
         const { error } = await supabase.from('events').update(payload).eq('id', editingId)
         if (error) throw error
@@ -89,66 +90,81 @@ export default function EventsPage() {
         <Button className="gap-2" onClick={openAdd}><Plus className="h-4 w-4" /> Add Event</Button>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>}
 
-      <Card>
-        <CardHeader><CardTitle>All Events ({items.length})</CardTitle></CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-          ) : items.length === 0 ? (
-            <div className="text-center py-16">
-              <CalendarDays className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-500">No events scheduled yet.</p>
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All Events ({items.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading events...</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map(ev => (
-                    <TableRow key={ev.id}>
-                      <TableCell className="font-medium">{ev.title}</TableCell>
-                      <TableCell className="text-sm">
-                        <span className="flex items-center gap-1.5 text-slate-600">
-                          <CalendarDays className="h-3.5 w-3.5" />
-                          {new Date(ev.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <span className="flex items-center gap-1.5 text-slate-600"><Clock className="h-3.5 w-3.5" />{ev.event_time}</span>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        <span className="flex items-center gap-1.5 text-slate-600"><MapPin className="h-3.5 w-3.5" />{ev.location}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${isUpcoming(ev.event_date) ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}`}>
-                          {isUpcoming(ev.event_date) ? 'Upcoming' : 'Past'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(ev)}><Edit2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" className="text-red-600" onClick={() => { setDeleteId(ev.id); setDeleteDialogOpen(true) }}><Trash2 className="h-4 w-4" /></Button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <CalendarDays className="h-6 w-6 text-slate-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No events scheduled</h3>
+            <p className="text-sm text-slate-500">Create an event to get started.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">Image</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map(ev => (
+                  <TableRow key={ev.id}>
+                    <TableCell>
+                      {ev.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={ev.image_url} alt={ev.title} className="w-9 h-9 rounded-lg object-cover"
+                          onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/80x80?text=No+Img' }} />
+                      ) : (
+                        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
+                          <ImageIcon className="h-4 w-4 text-slate-300" />
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{ev.title}</TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                      {new Date(ev.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">{ev.event_time}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{ev.location}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
+                        isUpcoming(ev.event_date) ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-700/10' : 'bg-slate-50 text-slate-600 ring-1 ring-slate-600/10'
+                      }`}>
+                        {isUpcoming(ev.event_date) ? 'Upcoming' : 'Past'}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(ev)}><Edit2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" className="text-red-600" onClick={() => { setDeleteId(ev.id); setDeleteDialogOpen(true) }}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent aria-describedby={undefined}>
@@ -161,6 +177,18 @@ export default function EventsPage() {
             </div>
             <div className="space-y-1"><Label>Location *</Label><Input value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} placeholder="School Auditorium" /></div>
             <div className="space-y-1"><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} /></div>
+            <div className="space-y-1">
+              <Label>Image</Label>
+              <div className="pt-2">
+                <ImageUpload
+                  folder="events"
+                  shape="square"
+                  value={form.image_url}
+                  onChange={url => setForm(f => ({ ...f, image_url: url }))}
+                  onRemove={() => setForm(f => ({ ...f, image_url: '' }))}
+                />
+              </div>
+            </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <DialogFooter>

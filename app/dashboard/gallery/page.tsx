@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { GalleryItem } from '@/lib/supabase/types'
 import { ImageUpload } from '@/components/ui/image-upload'
 
-const CATEGORIES = ['Events', 'Sports', 'Academics', 'Cultural', 'Infrastructure', 'Other']
+const DEFAULT_CATEGORIES = ['Events', 'Sports', 'Academics', 'Cultural', 'Infrastructure', 'Other']
 
 export default function GalleryPage() {
   const supabase = createClient()
@@ -77,7 +77,8 @@ export default function GalleryPage() {
     finally { setIsSaving(false) }
   }
 
-  const allCategories = ['All', ...CATEGORIES]
+  const existingCategories = [...new Set(items.map(item => item.category))]
+  const allCategories = ['All', ...new Set([...DEFAULT_CATEGORIES, ...existingCategories])]
   const filtered = items.filter(item => {
     const matchSearch = item.title.toLowerCase().includes(search.toLowerCase())
     const matchCat = categoryFilter === 'All' || item.category === categoryFilter
@@ -101,56 +102,60 @@ export default function GalleryPage() {
         </Button>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>}
 
       {/* Search + Filter */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input placeholder="Search by title…" className="pl-10" value={search}
-                onChange={e => setSearch(e.target.value)} />
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              {allCategories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    categoryFilter === cat
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat} {cat !== 'All' && categoryCount[cat] ? `(${categoryCount[cat]})` : ''}
-                </button>
-              ))}
-            </div>
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input placeholder="Search by title…" className="pl-10" value={search}
+              onChange={e => setSearch(e.target.value)} />
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex gap-2 flex-wrap">
+            {allCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  categoryFilter === cat
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {cat} {cat !== 'All' && categoryCount[cat] ? `(${categoryCount[cat]})` : ''}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Gallery Grid */}
       {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+        <div className="flex justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <p className="text-sm text-slate-400">Loading gallery...</p>
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <ImageIcon className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-            <p className="text-slate-500">{search || categoryFilter !== 'All' ? 'No images match your filter.' : 'No images in the gallery yet.'}</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl border border-slate-200 py-20 text-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+            <ImageIcon className="h-6 w-6 text-slate-300" />
+          </div>
+          <h3 className="text-sm font-medium text-slate-700 mb-1">No images found</h3>
+          <p className="text-sm text-slate-500">{search || categoryFilter !== 'All' ? 'No images match your filter.' : 'No images in the gallery yet.'}</p>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filtered.map(item => (
-            <div key={item.id} className="group relative rounded-lg overflow-hidden bg-slate-100 aspect-square cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+            <div key={item.id} className="group relative rounded-lg overflow-hidden bg-slate-100 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
               onClick={() => setSelectedItem(item)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={item.image_url}
                 alt={item.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full object-contain group-hover:scale-105 transition-transform duration-300 max-h-[80vh]"
                 onError={e => { (e.target as HTMLImageElement).src = 'https://placehold.co/400x400?text=Image' }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -181,15 +186,16 @@ export default function GalleryPage() {
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Image title" />
             </div>
             <div className="space-y-1">
-              <Label>Category</Label>
-              <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map(cat => (
-                  <button key={cat} type="button" onClick={() => setForm(f => ({ ...f, category: cat }))}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                      form.category === cat ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-                    }`}>{cat}</button>
+              <Label htmlFor="category">Category</Label>
+              <Input id="category" value={form.category}
+                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+                placeholder="e.g. Events, Sports, or type a new one"
+                list="category-suggestions" />
+              <datalist id="category-suggestions">
+                {existingCategories.map(cat => (
+                  <option key={cat} value={cat} />
                 ))}
-              </div>
+              </datalist>
             </div>
             <div className="space-y-1">
               <Label>Image Upload *</Label>

@@ -174,23 +174,27 @@ export function CSVImportDialog({
           /* ── Results View ── */
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-200 bg-emerald-50/50">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                </div>
                 <div>
-                  <p className="text-2xl font-bold text-green-900">{result.success}</p>
-                  <p className="text-sm text-green-700">Imported</p>
+                  <p className="text-2xl font-bold text-emerald-900">{result.success}</p>
+                  <p className="text-sm text-emerald-600 font-medium">Imported</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg">
-                <AlertCircle className="h-8 w-8 text-red-600" />
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-red-200 bg-red-50/50">
+                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                </div>
                 <div>
                   <p className="text-2xl font-bold text-red-900">{result.failed}</p>
-                  <p className="text-sm text-red-700">Failed</p>
+                  <p className="text-sm text-red-600 font-medium">Failed</p>
                 </div>
               </div>
             </div>
             {result.errors.length > 0 && (
-              <div className="max-h-40 overflow-y-auto rounded-lg bg-slate-50 p-3 space-y-1">
+              <div className="max-h-40 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-1">
                 {result.errors.map((err, i) => (
                   <p key={i} className="text-xs text-red-700 font-mono">{err}</p>
                 ))}
@@ -246,16 +250,18 @@ export function CSVImportDialog({
 
             {/* File Upload */}
             {!file ? (
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-slate-400 transition-all duration-200">
                 <FileSpreadsheet className="h-8 w-8 text-slate-400 mb-1.5" />
                 <span className="text-sm font-medium text-slate-600">Click to select a CSV file</span>
                 <input type="file" accept=".csv" className="hidden" onChange={handleFileChange} />
               </label>
             ) : (
               <>
-                <div className="flex items-center justify-between bg-blue-50 px-4 py-3 rounded-lg">
+                <div className="flex items-center justify-between bg-blue-50 border border-blue-200 px-4 py-3 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                    <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                    </div>
                     <div>
                       <p className="text-sm font-medium text-blue-900">{file.name}</p>
                       <p className="text-xs text-blue-600">{(file.size / 1024).toFixed(1)} KB</p>

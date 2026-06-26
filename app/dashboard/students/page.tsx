@@ -241,166 +241,170 @@ export default function StudentsPage() {
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {/* Search and Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search by name, admission no, or phone…"
-                className="pl-10"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Classes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.section ? `${c.class_name} ${c.section}` : c.class_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Academic Years" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Academic Years</SelectItem>
-                {academicYears.map((y) => (
-                  <SelectItem key={y.id} value={y.id}>
-                    {y.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search by name, admission no, or phone…"
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Classes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {classes.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.section ? `${c.class_name} ${c.section}` : c.class_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Academic Years" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Academic Years</SelectItem>
+              {academicYears.map((y) => (
+                <SelectItem key={y.id} value={y.id}>
+                  {y.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Students ({filtered.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All Students ({filtered.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading students...</p>
             </div>
-          ) : filtered.length === 0 ? (
-            <p className="text-center py-12 text-slate-500">
-              No students found.
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Profile</TableHead>
-                    <TableHead>Admission No.</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Current Class</TableHead>
-                    <TableHead>History</TableHead>
-                    <TableHead>Parent</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell>
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border bg-slate-100 flex items-center justify-center">
-                          {student.image_url ? (
-                            <Image
-                              src={student.image_url}
-                              alt={student.full_name}
-                              fill
-                              className="object-cover"
-                              sizes="40px"
-                            />
-                          ) : (
-                            <User className="h-5 w-5 text-slate-400" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">
-                        {student.admission_no}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {student.full_name}
-                      </TableCell>
-                      <TableCell>{getClassName(student)}</TableCell>
-                      <TableCell>
-                        <span className="text-xs text-slate-500 font-medium bg-slate-100 px-2 py-1 rounded-md">
-                          {student.student_enrollments?.length || 0} years
-                        </span>
-                      </TableCell>
-                      <TableCell>{student.parent_name || "—"}</TableCell>
-                      <TableCell>{student.phone || "—"}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${student.is_active
-                            ? "bg-green-100 text-green-800"
-                            : "bg-slate-100 text-slate-600"
-                            }`}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <User className="h-6 w-6 text-slate-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No students found</h3>
+            <p className="text-sm text-slate-500">Try adjusting your search or filters.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Profile</TableHead>
+                  <TableHead>Admission No.</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Class</TableHead>
+                  <TableHead>History</TableHead>
+                  <TableHead>Parent</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>
+                      <div className="relative h-9 w-9 overflow-hidden rounded-full bg-slate-100 flex items-center justify-center ring-1 ring-slate-200">
+                        {student.image_url ? (
+                          <Image
+                            src={student.image_url}
+                            alt={student.full_name}
+                            fill
+                            className="object-cover"
+                            sizes="36px"
+                          />
+                        ) : (
+                          <User className="h-4 w-4 text-slate-400" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-slate-500">
+                      {student.admission_no}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {student.full_name}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">{getClassName(student)}</TableCell>
+                    <TableCell>
+                      <span className="text-xs text-slate-500 font-medium bg-slate-50 px-2 py-0.5 rounded-md">
+                        {student.student_enrollments?.length || 0} yr
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">{student.parent_name || "—"}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{student.phone || "—"}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
+                          student.is_active
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-700/10"
+                            : "bg-slate-50 text-slate-600 ring-1 ring-slate-600/10"
+                        }`}
+                      >
+                        {student.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Copy QR Link"
+                          onClick={() => copyQrLink(student)}
                         >
-                          {student.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Copy QR Link"
-                            onClick={() => copyQrLink(student)}
-                          >
-                            <Link className="h-4 w-4 text-blue-600" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              router.push(`/dashboard/students/${student.id}`)
-                            }
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => {
-                              setDeleteId(student.id);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                          <Link className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/dashboard/students/${student.id}`)
+                          }
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => {
+                            setDeleteId(student.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

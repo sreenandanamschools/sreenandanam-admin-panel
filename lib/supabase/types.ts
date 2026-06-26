@@ -124,6 +124,7 @@ export interface SchoolEvent {
   event_time: string
   location: string
   description: string | null
+  image_url: string | null
   created_at: string
 }
 

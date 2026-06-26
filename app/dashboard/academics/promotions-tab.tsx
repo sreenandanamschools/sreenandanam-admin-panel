@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -191,73 +192,79 @@ export default function PromotionsTab() {
       </div>
 
       {/* Student List */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <div>
-            <CardTitle>3. Select Students</CardTitle>
-            <CardDescription>
+            <h3 className="text-sm font-semibold text-slate-900">3. Select Students</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
               {sourceYearId && sourceClassId 
                 ? `Found ${sourceEnrollments.length} active students eligible for promotion` 
                 : 'Select source class to load students'}
-            </CardDescription>
+            </p>
           </div>
           <Button 
             disabled={selectedEnrollmentIds.size === 0 || isPromoting || !targetYearId || !targetClassId} 
             onClick={handlePromote}
-            className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+            className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {isPromoting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             Promote {selectedEnrollmentIds.size > 0 ? selectedEnrollmentIds.size : ''} Students
             <ArrowRight className="h-4 w-4 ml-1" />
           </Button>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-          ) : sourceEnrollments.length === 0 ? (
-            <div className="text-center py-12 border-2 border-dashed rounded-lg bg-slate-50">
-              <p className="text-slate-500 font-medium">No active students to display</p>
-              <p className="text-slate-400 text-sm mt-1">Select a valid source academic year and class above.</p>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading students...</p>
             </div>
-          ) : (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader className="bg-slate-50">
-                  <TableRow>
-                    <TableHead className="w-12 text-center">
-                      <Checkbox 
-                        checked={selectedEnrollmentIds.size === sourceEnrollments.length && sourceEnrollments.length > 0}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead>Admission No</TableHead>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Roll No</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sourceEnrollments.map(e => {
-                    const student = e.students as any
-                    return (
-                      <TableRow key={e.id} className={selectedEnrollmentIds.has(e.id) ? 'bg-blue-50/30' : ''}>
-                        <TableCell className="text-center">
-                          <Checkbox 
-                            checked={selectedEnrollmentIds.has(e.id)}
-                            onCheckedChange={(checked) => handleSelectOne(e.id, !!checked)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-slate-500 font-mono text-sm">{student?.admission_no}</TableCell>
-                        <TableCell className="font-medium">{student?.full_name}</TableCell>
-                        <TableCell>{e.roll_no || '—'}</TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+          </div>
+        ) : sourceEnrollments.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-6 w-6 text-slate-300" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No active students to display</h3>
+            <p className="text-sm text-slate-500">Select a valid source academic year and class above.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12 text-center">
+                    <Checkbox 
+                      checked={selectedEnrollmentIds.size === sourceEnrollments.length && sourceEnrollments.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Admission No</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Roll No</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sourceEnrollments.map(e => {
+                  const student = e.students as any
+                  return (
+                    <TableRow key={e.id} className={selectedEnrollmentIds.has(e.id) ? 'bg-blue-50/30' : ''}>
+                      <TableCell className="text-center">
+                        <Checkbox 
+                          checked={selectedEnrollmentIds.has(e.id)}
+                          onCheckedChange={(checked) => handleSelectOne(e.id, !!checked)}
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-500 font-mono">{student?.admission_no}</TableCell>
+                      <TableCell className="font-medium">{student?.full_name}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{e.roll_no || '—'}</TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

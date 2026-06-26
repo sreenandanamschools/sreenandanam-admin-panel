@@ -78,58 +78,66 @@ export default function CareersPage() {
         <p className="text-slate-600 mt-1">View job applications submitted through the website</p>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>}
 
-      <Card>
-        <CardHeader><CardTitle>All Applications ({items.length})</CardTitle></CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-          ) : items.length === 0 ? (
-            <div className="text-center py-16">
-              <Briefcase className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-500">No applications received yet.</p>
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All Applications ({items.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading applications...</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Applied On</TableHead>
-                    <TableHead>Resume</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <Briefcase className="h-6 w-6 text-slate-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No applications yet</h3>
+            <p className="text-sm text-slate-500">Applications submitted through the website will appear here.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Applied On</TableHead>
+                  <TableHead>Resume</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{c.email}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{c.phone}</TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                      {new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell>
+                      <button onClick={e => openResume(c.resume_url, e)} className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        <ExternalLink className="h-3.5 w-3.5" /> View
+                      </button>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-red-600" onClick={() => { setDeleteId(c.id); setDeleteDialogOpen(true) }}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map(c => (
-                    <TableRow key={c.id} className="hover:bg-slate-50">
-                      <TableCell className="font-medium">{c.name}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{c.email}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{c.phone}</TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {new Date(c.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </TableCell>
-                      <TableCell>
-                        <button onClick={e => openResume(c.resume_url, e)} className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium">
-                          <ExternalLink className="h-3.5 w-3.5" /> View
-                        </button>
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
-                        <Button variant="ghost" size="sm" className="text-slate-600 hover:text-red-600" onClick={() => { setDeleteId(c.id); setDeleteDialogOpen(true) }} title="Delete">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

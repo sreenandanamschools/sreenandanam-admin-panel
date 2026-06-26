@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -167,98 +167,109 @@ export default function EnrollmentsTab() {
         </Button>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>
+      )}
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search by student name or admission no..."
-                className="pl-10"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Academic Year" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {academicYears.map(y => <SelectItem key={y.id} value={y.id}>{y.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="All Classes" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {classes.map(c => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.section ? `${c.class_name} ${c.section}` : c.class_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Search by student name or admission no..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Academic Year" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Years</SelectItem>
+              {academicYears.map(y => <SelectItem key={y.id} value={y.id}>{y.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="All Classes" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {classes.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.section ? `${c.class_name} ${c.section}` : c.class_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Enrollment Records ({filtered.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-          ) : filtered.length === 0 ? (
-            <p className="text-center py-12 text-slate-500">No enrollment records found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Admission No</TableHead>
-                    <TableHead>Academic Year</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Roll No</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(e => {
-                    const student = e.students as any
-                    const year = e.academic_years as any
-                    const cls = e.classes as any
-                    return (
-                      <TableRow key={e.id}>
-                        <TableCell className="font-medium">{student?.full_name}</TableCell>
-                        <TableCell className="text-slate-500">{student?.admission_no}</TableCell>
-                        <TableCell>{year?.name}</TableCell>
-                        <TableCell>{cls ? `${cls.class_name} ${cls.section || ''}` : '—'}</TableCell>
-                        <TableCell>{e.roll_no || '—'}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize
-                            ${e.status === 'active' ? 'bg-green-100 text-green-700' :
-                              e.status === 'promoted' ? 'bg-blue-100 text-blue-700' :
-                              e.status === 'detained' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}
-                          >
-                            {e.status}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(e)}>Edit</Button>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">Enrollment Records ({filtered.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading enrollments...</p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <Loader2 className="h-6 w-6 text-slate-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No enrollment records found</h3>
+            <p className="text-sm text-slate-500">Try adjusting your search or filters.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Admission No</TableHead>
+                  <TableHead>Academic Year</TableHead>
+                  <TableHead>Class</TableHead>
+                  <TableHead>Roll No</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map(e => {
+                  const student = e.students as any
+                  const year = e.academic_years as any
+                  const cls = e.classes as any
+                  return (
+                    <TableRow key={e.id}>
+                      <TableCell className="font-medium">{student?.full_name}</TableCell>
+                      <TableCell className="text-sm text-slate-500 font-mono">{student?.admission_no}</TableCell>
+                      <TableCell className="text-sm">{year?.name}</TableCell>
+                      <TableCell className="text-sm">{cls ? `${cls.class_name} ${cls.section || ''}` : '—'}</TableCell>
+                      <TableCell className="text-sm">{e.roll_no || '—'}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium capitalize
+                          ${e.status === 'active' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-700/10' :
+                            e.status === 'promoted' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-700/10' :
+                            e.status === 'detained' ? 'bg-red-50 text-red-700 ring-1 ring-red-700/10' : 'bg-slate-50 text-slate-600 ring-1 ring-slate-600/10'}`}
+                        >
+                          {e.status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(e)}>
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md" aria-describedby={undefined}>

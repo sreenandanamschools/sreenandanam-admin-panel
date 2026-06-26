@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { IDCardData, IDCardSettings } from "@/components/id-card/types";
 import { IDCardPreview } from "@/components/id-card/IDCardPreview";
 import { IDCardForm } from "@/components/id-card/IDCardForm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -64,11 +64,11 @@ export default function IDCardGeneratorPage() {
 
         {/* Right Side: Live Preview */}
         <div className="lg:col-span-8 sticky top-6">
-          <Card className="border border-dashed border-gray-300 bg-gray-50/50">
-            <CardHeader>
-              <CardTitle className="text-center text-gray-500">Live Preview</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center min-h-[500px] overflow-auto pb-10">
+          <div className="bg-white rounded-xl border-2 border-dashed border-slate-200">
+            <div className="px-6 py-4 border-b border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider text-center">Live Preview</h3>
+            </div>
+            <div className="flex flex-col items-center justify-center min-h-[500px] p-8">
 
               <div className="relative">
                 <div
@@ -76,10 +76,7 @@ export default function IDCardGeneratorPage() {
                   style={{ transformOrigin: "center" }}
                 >
                   <div className="flex flex-col items-center">
-                    <span
-                      className="text-xs font-semibold mb-2 uppercase tracking-wider"
-                      style={{ color: "#6b7280" }}
-                    >
+                    <span className="text-xs font-semibold mb-2 uppercase tracking-wider text-slate-500">
                       Front
                     </span>
                     <IDCardPreview
@@ -89,10 +86,7 @@ export default function IDCardGeneratorPage() {
                     />
                   </div>
                   <div className="flex flex-col items-center">
-                    <span
-                      className="text-xs font-semibold mb-2 uppercase tracking-wider"
-                      style={{ color: "#6b7280" }}
-                    >
+                    <span className="text-xs font-semibold mb-2 uppercase tracking-wider text-slate-500">
                       Back
                     </span>
                     <IDCardPreview
@@ -104,12 +98,12 @@ export default function IDCardGeneratorPage() {
                 </div>
               </div>
 
-              <p className="text-xs text-gray-400 mt-8 text-center max-w-sm">
+              <p className="text-xs text-slate-400 mt-8 text-center max-w-sm">
                 The preview above shows how the ID card will look. Use the settings panel on the left to customize the appearance.
               </p>
 
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -169,11 +169,13 @@ export default function AcademicYearsTab() {
 
       {/* Active Year Banner */}
       {activeYear && (
-        <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+        <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
+            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+          </div>
           <div>
-            <p className="font-semibold text-green-800">Current Academic Year: {activeYear.name}</p>
-            <p className="text-sm text-green-700">
+            <p className="font-semibold text-emerald-800">Current Academic Year: {activeYear.name}</p>
+            <p className="text-sm text-emerald-600">
               {activeYear.start_date} → {activeYear.end_date}
             </p>
           </div>
@@ -182,108 +184,100 @@ export default function AcademicYearsTab() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Years</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{years.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-green-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Current Year</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-bold text-green-700 truncate">
-              {activeYear?.name ?? '— None set —'}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Latest Year</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-bold truncate">
-              {years[0]?.name ?? '—'}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Total Years</p>
+          <p className="text-2xl font-bold text-slate-900">{years.length}</p>
+        </div>
+        <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-5">
+          <p className="text-xs font-medium text-emerald-600 uppercase tracking-wider mb-1">Current Year</p>
+          <p className="text-lg font-bold text-emerald-800 truncate">
+            {activeYear?.name ?? '— None set —'}
+          </p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Latest Year</p>
+          <p className="text-lg font-bold text-slate-900 truncate">
+            {years[0]?.name ?? '—'}
+          </p>
+        </div>
       </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Academic Years ({years.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All Academic Years ({years.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading academic years...</p>
             </div>
-          ) : years.length === 0 ? (
-            <div className="text-center py-12">
-              <CalendarDays className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-500">No academic years yet. Add one to get started.</p>
-              <Button className="mt-4 gap-2" onClick={openAdd}>
-                <Plus className="h-4 w-4" /> Add Academic Year
-              </Button>
+          </div>
+        ) : years.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <CalendarDays className="h-6 w-6 text-slate-300" />
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No academic years yet</h3>
+            <p className="text-sm text-slate-500 mb-4">Add one to get started.</p>
+            <Button className="gap-2" onClick={openAdd}>
+              <Plus className="h-4 w-4" /> Add Academic Year
+            </Button>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Start Date</TableHead>
+                  <TableHead>End Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {years.map(year => {
+                  const isCurrent = year.start_date <= today && year.end_date >= today
+                  return (
+                  <TableRow key={year.id} className={isCurrent ? 'bg-emerald-50/40' : ''}>
+                    <TableCell className="font-semibold">{year.name}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{year.start_date}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{year.end_date}</TableCell>
+                    <TableCell>
+                      {isCurrent ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-700/10">
+                          <CheckCircle2 className="h-3 w-3" /> Current
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-50 text-slate-600 ring-1 ring-slate-600/10">
+                          Past/Future
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(year)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => { setDeleteId(year.id); setDeleteDialogOpen(true) }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {years.map(year => {
-                    const isCurrent = year.start_date <= today && year.end_date >= today
-                    return (
-                    <TableRow key={year.id} className={isCurrent ? 'bg-green-50/60' : ''}>
-                      <TableCell className="font-semibold">{year.name}</TableCell>
-                      <TableCell>{year.start_date}</TableCell>
-                      <TableCell>{year.end_date}</TableCell>
-                      <TableCell>
-                        {isCurrent ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Current
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                            Past/Future
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(year)}>
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => { setDeleteId(year.id); setDeleteDialogOpen(true) }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )})}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                )})}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       {/* Add / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

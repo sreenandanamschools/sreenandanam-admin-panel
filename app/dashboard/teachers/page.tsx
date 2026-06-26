@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -120,105 +120,110 @@ export default function TeachersPage() {
         </div>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-
-
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>
+      )}
 
       {/* Search */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search by name, email, or subject…"
-              className="pl-10"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Search by name, email, or subject…"
+            className="pl-10"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
 
       {/* Teachers Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Teachers ({filtered.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All Teachers ({filtered.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading teachers...</p>
             </div>
-          ) : filtered.length === 0 ? (
-            <p className="text-center py-12 text-slate-500">No teachers found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Profile</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Join Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <User className="h-6 w-6 text-slate-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No teachers found</h3>
+            <p className="text-sm text-slate-500">Try adjusting your search.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Profile</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Join Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map(teacher => (
+                  <TableRow key={teacher.id}>
+                    <TableCell>
+                      <div className="relative h-9 w-9 overflow-hidden rounded-full bg-slate-100 flex items-center justify-center ring-1 ring-slate-200">
+                        {teacher.image_url ? (
+                          <Image src={teacher.image_url} alt={teacher.first_name} fill className="object-cover" sizes="36px" />
+                        ) : (
+                          <User className="h-4 w-4 text-slate-400" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {teacher.first_name} {teacher.last_name}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">{teacher.email}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-blue-700/10">
+                        {teacher.subject}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">{teacher.phone || '—'}</TableCell>
+                    <TableCell className="text-sm text-slate-500">{teacher.join_date}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Copy QR Link"
+                          onClick={() => copyQrLink(teacher)}
+                        >
+                          <Link className="h-4 w-4 text-blue-600" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/teachers/${teacher.id}`)}>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => { setDeleteId(teacher.id); setDeleteDialogOpen(true) }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(teacher => (
-                    <TableRow key={teacher.id}>
-                      <TableCell>
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border bg-slate-100 flex items-center justify-center">
-                          {teacher.image_url ? (
-                            <Image src={teacher.image_url} alt={teacher.first_name} fill className="object-cover" sizes="40px" />
-                          ) : (
-                            <User className="h-5 w-5 text-slate-400" />
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {teacher.first_name} {teacher.last_name}
-                      </TableCell>
-                      <TableCell className="text-sm">{teacher.email}</TableCell>
-                      <TableCell>
-                        <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
-                          {teacher.subject}
-                        </span>
-                      </TableCell>
-                      <TableCell>{teacher.phone || '—'}</TableCell>
-                      <TableCell>{teacher.join_date}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            title="Copy QR Link"
-                            onClick={() => copyQrLink(teacher)}
-                          >
-                            <Link className="h-4 w-4 text-blue-600" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => router.push(`/dashboard/teachers/${teacher.id}`)}>
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => { setDeleteId(teacher.id); setDeleteDialogOpen(true) }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

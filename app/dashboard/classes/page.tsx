@@ -119,79 +119,87 @@ export default function ClassesPage() {
         </Button>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-slate-600">Total Classes</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{classes.length}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-slate-600">Active Students</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{totalStudents.toLocaleString()}</p></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-slate-600">Avg Class Size</CardTitle></CardHeader>
-          <CardContent><p className="text-2xl font-bold">{avgSize}</p></CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500 mb-1">Total Classes</p>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{classes.length}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500 mb-1">Active Students</p>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{totalStudents.toLocaleString()}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <p className="text-sm font-medium text-slate-500 mb-1">Avg Class Size</p>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{avgSize}</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>All Classes ({classes.length})</CardTitle></CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-          ) : classes.length === 0 ? (
-            <div className="text-center py-12">
-              <School className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">No classes yet. Add your first class.</p>
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All Classes ({classes.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading classes...</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Class Name</TableHead>
-                    <TableHead>Section</TableHead>
-                    <TableHead>Students</TableHead>
-                    <TableHead>Occupancy</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {classes.map(cls => {
-                    const count = cls.student_count || 0
-                    return (
-                      <TableRow key={cls.id}>
-                        <TableCell className="font-medium">{cls.class_name}</TableCell>
-                        <TableCell>{cls.section || '—'}</TableCell>
-                        <TableCell>{count}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <div className="w-24 h-2 bg-slate-200 rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-600 rounded-full" style={{ width: `${Math.min(100, count * 2)}%` }} />
-                            </div>
-                            <span className="text-sm text-slate-600">{count} students</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => openEdit(cls)}><Edit2 className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="sm" className="text-red-600"
-                              onClick={() => { setDeleteId(cls.id); setDeleteDialogOpen(true) }}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+          </div>
+        ) : classes.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <School className="h-6 w-6 text-slate-300" />
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No classes yet</h3>
+            <p className="text-sm text-slate-500">Add your first class to get started.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Class Name</TableHead>
+                  <TableHead>Section</TableHead>
+                  <TableHead>Students</TableHead>
+                  <TableHead>Occupancy</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {classes.map(cls => {
+                  const count = cls.student_count || 0
+                  return (
+                    <TableRow key={cls.id}>
+                      <TableCell className="font-medium">{cls.class_name}</TableCell>
+                      <TableCell className="text-slate-500">{cls.section || '—'}</TableCell>
+                      <TableCell>{count}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-slate-900 rounded-full" style={{ width: `${Math.min(100, count * 2)}%` }} />
+                          </div>
+                          <span className="text-xs text-slate-500">{count} students</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => openEdit(cls)}><Edit2 className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="sm" className="text-red-600"
+                            onClick={() => { setDeleteId(cls.id); setDeleteDialogOpen(true) }}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-sm" aria-describedby={undefined}>

@@ -94,7 +94,7 @@ export function ImageUpload({ value, onChange, onRemove, folder, shape = 'avatar
         {isUploading ? (
           <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
         ) : value ? (
-          <Image src={value} alt="Profile" fill className="object-cover" sizes="128px" />
+          <Image src={value} alt="Profile" fill className="object-contain p-2" sizes="128px" />
         ) : (
           <Camera className="h-10 w-10 text-slate-300" />
         )}

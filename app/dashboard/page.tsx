@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { ArrowUpRight, ArrowDownRight, Users, BookOpen, CreditCard, TrendingUp, ClipboardEdit, UserPlus, IndianRupee, Megaphone } from 'lucide-react'
+import { Users, BookOpen, TrendingUp, ClipboardEdit, UserPlus, Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
@@ -162,67 +162,64 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {statCards.map((stat) => {
           const Icon = stat.icon
-          const styles: Record<string, { bg: string; icon: string }> = {
-            blue:   { bg: 'bg-blue-50',   icon: 'bg-blue-100 text-blue-600' },
-            green:  { bg: 'bg-green-50',  icon: 'bg-green-100 text-green-600' },
-            amber:  { bg: 'bg-amber-50',  icon: 'bg-amber-100 text-amber-600' },
-            purple: { bg: 'bg-purple-50', icon: 'bg-purple-100 text-purple-600' },
+          const iconColors: Record<string, string> = {
+            blue: 'bg-blue-50 text-blue-600 ring-blue-600/20',
+            green: 'bg-emerald-50 text-emerald-600 ring-emerald-600/20',
+            purple: 'bg-violet-50 text-violet-600 ring-violet-600/20',
           }
-          const s = styles[stat.color]
           return (
-            <Card key={stat.title} className={s.bg}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-slate-600">{stat.title}</CardTitle>
-                  <div className={`p-2 rounded-lg ${s.icon}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+            <div key={stat.title} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-medium text-slate-500">{stat.title}</span>
+                <div className={`p-2.5 rounded-xl ring-1 ${iconColors[stat.color]}`}>
+                  <Icon className="h-5 w-5" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="text-3xl font-bold text-slate-900 tracking-tight">{stat.value}</div>
+            </div>
           )
         })}
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Attendance Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Attendance Trend (Weekly)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-6 py-5 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-900">Attendance Trend (Weekly)</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Average attendance percentage by day</p>
+          </div>
+          <div className="p-6">
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis unit="%" domain={[0, 100]} />
-                <Tooltip formatter={(v) => `${v}%`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis unit="%" domain={[0, 100]} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <Tooltip formatter={(v) => `${v}%`} contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                 <Line
                   type="monotone"
                   dataKey="attendance"
-                  stroke="#3b82f6"
+                  stroke="#0f172a"
                   strokeWidth={2}
-                  dot={{ fill: '#3b82f6' }}
+                  dot={{ fill: '#0f172a', strokeWidth: 0, r: 4 }}
+                  activeDot={{ r: 6, fill: '#0f172a' }}
                 />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Class Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Student Distribution by Class</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-6 py-5 border-b border-slate-100">
+            <h3 className="text-sm font-semibold text-slate-900">Student Distribution by Class</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Active enrollment breakdown</p>
+          </div>
+          <div className="p-6">
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie
                   data={classDistributionData}
@@ -230,63 +227,60 @@ export default function DashboardPage() {
                   cy="50%"
                   labelLine={false}
                   label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
+                  outerRadius={90}
+                  innerRadius={50}
                   dataKey="value"
                 >
                   {classDistributionData.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
               </PieChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">Quick Actions</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Common tasks and shortcuts</p>
+        </div>
+        <div className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Button
-              variant="outline"
-              className="h-auto py-3 flex flex-col gap-2"
+            <button
               onClick={() => router.push('/dashboard/attendance')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-slate-900 hover:bg-slate-50 transition-all duration-150"
             >
-              <ClipboardEdit className="h-6 w-6 text-slate-700" />
-              <span className="text-sm">Mark Attendance</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-3 flex flex-col gap-2"
+              <div className="p-2.5 rounded-lg bg-slate-100 text-slate-700">
+                <ClipboardEdit className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Mark Attendance</span>
+            </button>
+            <button
               onClick={() => router.push('/dashboard/students')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-slate-900 hover:bg-slate-50 transition-all duration-150"
             >
-              <UserPlus className="h-6 w-6 text-slate-700" />
-              <span className="text-sm">Add Student</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-3 flex flex-col gap-2"
-              onClick={() => router.push('/dashboard/reports')}
-            >
-              <TrendingUp className="h-6 w-6 text-slate-700" />
-              <span className="text-sm">View Reports</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="h-auto py-3 flex flex-col gap-2"
+              <div className="p-2.5 rounded-lg bg-slate-100 text-slate-700">
+                <UserPlus className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Add Student</span>
+            </button>
+            <button
               onClick={() => router.push('/dashboard/announcements')}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-slate-900 hover:bg-slate-50 transition-all duration-150"
             >
-              <Megaphone className="h-6 w-6 text-slate-700" />
-              <span className="text-sm">New Announcement</span>
-            </Button>
+              <div className="p-2.5 rounded-lg bg-slate-100 text-slate-700">
+                <Megaphone className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Announcement</span>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -156,47 +156,49 @@ export default function FamousGuestsPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        <div className="flex justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <p className="text-sm text-slate-400">Loading honorary guests...</p>
+          </div>
         </div>
       ) : guests.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <Star className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-            <p className="text-slate-500">
-              No honorary guests have been added yet.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl border border-slate-200 py-20 text-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+            <Star className="h-6 w-6 text-slate-300" />
+          </div>
+          <h3 className="text-sm font-medium text-slate-700 mb-1">No honorary guests yet</h3>
+          <p className="text-sm text-slate-500">Add your first honored guest to get started.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {guests.map((Guest) => (
-            <Card
+            <div
               key={Guest.id}
-              className="overflow-hidden hover:shadow-md transition-shadow group"
+              className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-200 group"
             >
-              <div className="aspect-video relative bg-slate-100 flex items-center justify-center">
+              <div className="aspect-video relative bg-slate-50 flex items-center justify-center overflow-hidden">
                 {Guest.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={Guest.image_url}
                     alt={Guest.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-4"
                   />
                 ) : (
                   <Star className="h-12 w-12 text-slate-300" />
                 )}
                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
-                    size="icon"
+                    size="icon-sm"
                     variant="secondary"
-                    className="h-8 w-8 bg-white/90 hover:bg-white"
+                    className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
                     onClick={() => openEditDialog(Guest)}
                   >
                     <Edit2 className="h-4 w-4 text-slate-700" />
                   </Button>
                   <Button
-                    size="icon"
+                    size="icon-sm"
                     variant="destructive"
                     className="h-8 w-8"
                     onClick={() => {
@@ -208,33 +210,33 @@ export default function FamousGuestsPage() {
                   </Button>
                 </div>
               </div>
-              <CardContent className="p-5 space-y-3">
+              <div className="p-5 space-y-3">
                 <div>
-                  <h3 className="font-bold text-lg text-slate-900 line-clamp-1">
+                  <h3 className="text-sm font-semibold text-slate-900 line-clamp-1">
                     {Guest.name}
                   </h3>
-                  <p className="text-sm font-medium text-blue-600 line-clamp-1">
+                  <p className="text-xs font-medium text-blue-600 line-clamp-1 mt-0.5">
                     {Guest.designation}
                   </p>
                 </div>
 
                 {Guest.description && (
-                  <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed">
-                    "{Guest.description}"
+                  <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
+                    &ldquo;{Guest.description}&rdquo;
                   </p>
                 )}
 
-                <div className="flex items-center gap-2 text-xs text-slate-500 pt-2 border-t border-slate-100 mt-4">
+                <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-3 border-t border-slate-100">
                   <Calendar className="h-3.5 w-3.5" />
                   <span>
-                    Visited on{" "}
+                    Visited{" "}
                     {new Date(Guest.visited_at).toLocaleDateString(undefined, {
                       dateStyle: "medium",
                     })}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

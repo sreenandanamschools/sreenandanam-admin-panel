@@ -190,7 +190,7 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
             </p>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2 bg-blue-600 hover:bg-blue-700">
+        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
           {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {isNew ? 'Add Teacher' : 'Save Changes'}
         </Button>
@@ -199,11 +199,11 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: ID Card Preview */}
         <div className="space-y-6 lg:col-span-6">
-          <Card className="sticky top-6">
-            <CardHeader className="pb-3 text-center border-b border-gray-100">
-              <CardTitle className="text-sm font-semibold text-gray-500 uppercase tracking-wider">ID Card Preview</CardTitle>
+          <Card className="sticky top-6 overflow-hidden rounded-xl">
+            <CardHeader className="pb-3 text-center border-b border-slate-100">
+              <CardTitle className="text-sm font-semibold text-slate-500 uppercase tracking-wider">ID Card Preview</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-center justify-center gap-4 pt-6 pb-6 bg-gray-50/50 rounded-b-xl overflow-hidden">
+            <CardContent className="flex items-center justify-center gap-4 pt-6 pb-6 bg-slate-50/50 overflow-hidden">
               <div className="flex flex-col items-center scale-[0.85] origin-center -mx-4">
                 <IDCardPreview data={idCardData} settings={idCardSettings} isBack={false} />
               </div>

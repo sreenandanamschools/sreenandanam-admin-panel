@@ -124,80 +124,86 @@ export default function NewsPage() {
         </Button>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>}
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input placeholder="Search news…" className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="All Categories" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
+      <div className="bg-white rounded-xl border border-slate-200 p-5">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input placeholder="Search news…" className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
           </div>
-        </CardContent>
-      </Card>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="All Categories" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {/* Table */}
-      <Card>
-        <CardHeader><CardTitle>All News ({filtered.length})</CardTitle></CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-16">
-              <Newspaper className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-500">No news items found.</p>
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-6 py-5 border-b border-slate-100">
+          <h3 className="text-sm font-semibold text-slate-900">All News ({filtered.length})</h3>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+              <p className="text-sm text-slate-400">Loading news...</p>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Published</TableHead>
-                    <TableHead>Flags</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+              <Newspaper className="h-6 w-6 text-slate-300" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-700 mb-1">No news items</h3>
+            <p className="text-sm text-slate-500">No news items match your criteria.</p>
+          </div>
+        ) : (
+          <div className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Published</TableHead>
+                  <TableHead>Flags</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map(n => (
+                  <TableRow key={n.id}>
+                    <TableCell className="font-medium max-w-xs truncate">{n.title}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${categoryBadge(n.category)}`}>{n.category}</span>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-500">
+                      {new Date(n.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {n.is_new && <span className="px-2 py-0.5 rounded-md text-xs bg-blue-50 text-blue-700 font-medium ring-1 ring-blue-700/10">New</span>}
+                        {n.is_pinned && <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-md text-xs bg-amber-50 text-amber-700 font-medium ring-1 ring-amber-700/10"><Pin className="h-3 w-3" /> Pinned</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => openEdit(n)}><Edit2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => { setDeleteId(n.id); setDeleteDialogOpen(true) }}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(n => (
-                    <TableRow key={n.id}>
-                      <TableCell className="font-medium max-w-xs truncate">{n.title}</TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryBadge(n.category)}`}>{n.category}</span>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-500">
-                        {new Date(n.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {n.is_new && <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 font-medium">New</span>}
-                          {n.is_pinned && <span className="flex items-center gap-0.5 px-2 py-0.5 rounded text-xs bg-orange-100 text-orange-700 font-medium"><Pin className="h-3 w-3" /> Pinned</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(n)}><Edit2 className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => { setDeleteId(n.id); setDeleteDialogOpen(true) }}><Trash2 className="h-4 w-4" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -100,30 +100,34 @@ export default function AnnouncementsPage() {
         </Button>
       </div>
 
-      {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+      {error && <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>}
 
       {isLoading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+        <div className="flex justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+            <p className="text-sm text-slate-400">Loading announcements...</p>
+          </div>
+        </div>
       ) : announcements.length === 0 ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <Megaphone className="h-12 w-12 text-slate-200 mx-auto mb-3" />
-            <p className="text-slate-500">No announcements yet. Create the first one.</p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl border border-slate-200 py-20 text-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+            <Megaphone className="h-6 w-6 text-slate-300" />
+          </div>
+          <h3 className="text-sm font-medium text-slate-700 mb-1">No announcements yet</h3>
+          <p className="text-sm text-slate-500">Create the first announcement to get started.</p>
+        </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {announcements.map(a => (
-            <Card key={a.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
+            <div key={a.id} className="bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-all duration-200">
+              <div className="px-6 py-4 border-b border-slate-100">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-lg">{a.title}</CardTitle>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-xs text-slate-400">
-                        Published: {new Date(a.published_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                    </div>
+                    <h3 className="text-sm font-semibold text-slate-900">{a.title}</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Published {new Date(a.published_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
@@ -135,11 +139,11 @@ export default function AnnouncementsPage() {
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-slate-600 whitespace-pre-wrap leading-relaxed">{a.content}</p>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="px-6 py-4">
+                <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{a.content}</p>
+              </div>
+            </div>
           ))}
         </div>
       )}
