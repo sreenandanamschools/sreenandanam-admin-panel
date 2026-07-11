@@ -26,9 +26,11 @@ export default function GalleryPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [form, setForm] = useState({ title: '', category: 'Events', image_url: '' })
+  const [form, setForm] = useState({ title: '', category: 'Events', image_urls: [] as string[] })
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null)
+  const isUploading = uploadProgress !== null && uploadProgress.current < uploadProgress.total
 
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null)
 
@@ -48,19 +50,21 @@ export default function GalleryPage() {
   useEffect(() => { fetchAll() }, [fetchAll])
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.image_url.trim()) return
+    if (!form.title.trim() || form.image_urls.length === 0) return
     setIsSaving(true); setError(null)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const { error } = await supabase.from('gallery').insert({
+      const records = form.image_urls.map(url => ({
         title: form.title.trim(),
         category: form.category,
-        image_url: form.image_url.trim(),
+        image_url: url,
         uploaded_by: user?.id || null,
-      })
+      }))
+      const { error } = await supabase.from('gallery').insert(records)
       if (error) throw error
       setDialogOpen(false)
-      setForm({ title: '', category: 'Events', image_url: '' })
+      setForm({ title: '', category: 'Events', image_urls: [] })
+      setUploadProgress(null)
       await fetchAll()
     } catch (e: any) { setError(e.message) }
     finally { setIsSaving(false) }
@@ -97,7 +101,7 @@ export default function GalleryPage() {
           <h1 className="text-3xl font-bold text-slate-900">Gallery</h1>
           <p className="text-slate-600 mt-1">School photos and media</p>
         </div>
-        <Button className="gap-2" onClick={() => { setError(null); setDialogOpen(true) }}>
+        <Button className="gap-2" onClick={() => { setError(null); setForm({ title: '', category: 'Events', image_urls: [] }); setUploadProgress(null); setDialogOpen(true) }}>
           <Plus className="h-4 w-4" /> Add Image
         </Button>
       </div>
@@ -203,17 +207,28 @@ export default function GalleryPage() {
                 <ImageUpload 
                   folder="gallery"
                   shape="square"
-                  value={form.image_url} 
-                  onChange={url => setForm(f => ({ ...f, image_url: url }))}
-                  onRemove={() => setForm(f => ({ ...f, image_url: '' }))}
+                  multiple
+                  urls={form.image_urls}
+                  onUrlsChange={urls => setForm(f => ({ ...f, image_urls: urls }))}
+                  onProgress={(current, total) => setUploadProgress({ current, total })}
                 />
               </div>
+              {uploadProgress && uploadProgress.current < uploadProgress.total && (
+                <p className="text-xs text-slate-500 text-center">
+                  Uploading {uploadProgress.current} of {uploadProgress.total}...
+                </p>
+              )}
+              {form.image_urls.length > 0 && !isUploading && (
+                <p className="text-xs text-slate-500 text-center">
+                  {form.image_urls.length} image{form.image_urls.length > 1 ? 's' : ''} ready
+                </p>
+              )}
             </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button onClick={handleSave} disabled={isSaving || isUploading}>
               {isSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Add to Gallery
             </Button>
           </DialogFooter>
