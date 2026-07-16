@@ -15,6 +15,10 @@ export interface Class {
   class_name: string
   section: string | null
   created_at: string
+  academic_year_id?: string | null
+  class_teacher_id?: string | null
+  academic_years?: AcademicYear | null
+  teachers?: Teacher | null
 }
 
 export interface Student {
@@ -34,7 +38,6 @@ export interface Student {
   emergency_contact: string | null
   updated_at: string | null
   admission_date: string | null
-  studentid: string | null
   // Joined
   student_enrollments?: StudentEnrollment[] | null
 }
@@ -46,7 +49,7 @@ export interface StudentEnrollment {
   class_id: string
   roll_no: string | null
   section: string | null
-  status: 'active' | 'promoted' | 'transferred' | 'left' | 'completed'
+  status: 'active' | 'promoted' | 'detained' | 'graduated' | 'transferred' | 'inactive' | 'left' | 'completed'
   joined_on: string
   promoted_from_enrollment_id: string | null
   remarks: string | null
@@ -73,7 +76,6 @@ export interface Teacher {
   qualification: string | null
   experience_years: number | null
   updated_at: string | null
-  teacherid: string | null
 }
 
 export interface Attendance {

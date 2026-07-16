@@ -40,39 +40,10 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
     address: '',
     qualification: '',
     experience_years: 0,
-    teacherid: '',
   })
 
   useEffect(() => {
     async function loadData() {
-      // Helper to generate next teacher ID
-      const generateNextTeacherId = async () => {
-        const { data: existingTeachers } = await supabase
-          .from('teachers')
-          .select('teacherid')
-        
-        const currentYear = new Date().getFullYear()
-        const prefix = `T00${currentYear}`
-        let nextId = `${prefix}01`
-
-        if (existingTeachers && existingTeachers.length > 0) {
-          let maxSeq = 0
-          existingTeachers.forEach(t => {
-            if (t.teacherid && t.teacherid.startsWith(prefix)) {
-              const seqStr = t.teacherid.slice(prefix.length)
-              const seq = parseInt(seqStr, 10)
-              if (!isNaN(seq) && seq > maxSeq) {
-                maxSeq = seq
-              }
-            }
-          })
-          if (maxSeq > 0) {
-            nextId = `${prefix}${String(maxSeq + 1).padStart(2, '0')}`
-          }
-        }
-        return nextId
-      }
-
       if (!isNew) {
         const { data, error } = await supabase
           .from('teachers')
@@ -99,16 +70,7 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
           address: data.address || '',
           qualification: data.qualification || '',
           experience_years: data.experience_years || 0,
-          teacherid: data.teacherid || '',
         })
-
-        if (!data.teacherid) {
-          const nextId = await generateNextTeacherId()
-          setForm(f => ({ ...f, teacherid: nextId }))
-        }
-      } else {
-        const nextId = await generateNextTeacherId()
-        setForm(f => ({ ...f, teacherid: nextId }))
       }
       setIsLoading(false)
     }
@@ -125,7 +87,6 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
       const payload = {
         ...form,
         date_of_birth: form.date_of_birth || null,
-        teacherid: form.teacherid.trim() || null,
       }
 
       if (isNew) {
@@ -160,7 +121,7 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
     studentPhoto: form.image_url || "",
     grade: "Staff",
     stream: form.subject || "Subject",
-    idNumber: form.teacherid || "Teacher ID",
+    idNumber: "Staff",
     academicYear: "", // or format join date
     bloodGroup: "-", // Teacher table doesn't have blood group yet
     expiryDate: "",
@@ -244,15 +205,6 @@ export default function TeacherProfilePage({ params }: { params: Promise<{ id: s
                       <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-slate-700 border-b pb-2">System Details</h3>
                         <div className="space-y-2 pt-2">
-                          <Label htmlFor="teacherid">Teacher ID (unique)</Label>
-                          <Input 
-                            id="teacherid"
-                            value={form.teacherid} 
-                            onChange={e => setForm({...form, teacherid: e.target.value})} 
-                            placeholder="e.g. T00202601" 
-                          />
-                        </div>
-                        <div className="space-y-2">
                           <Label>Join Date</Label>
                           <Input type="date" value={form.join_date} onChange={e => setForm({...form, join_date: e.target.value})} />
                         </div>

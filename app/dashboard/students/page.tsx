@@ -36,8 +36,6 @@ import {
   Loader2,
   User,
   Upload,
-  IdCard,
-  Link,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -170,14 +168,7 @@ export default function StudentsPage() {
     }
   };
 
-  const copyQrLink = (student: Student) => {
-    const baseUrl = "https://sreenandanam-school-website.vercel.app";
-    // Use studentid if available, fallback to admission_no for the unique identifier in the link
-    const idToUse = (student as any).studentid || student.admission_no;
-    const link = `${baseUrl}/s/id-card/student/${encodeURIComponent(idToUse)}`;
-    navigator.clipboard.writeText(link);
-    toast.success("Student QR Link copied!");
-  };
+
 
   const filtered = students.filter((s) => {
     const matchSearch =
@@ -214,14 +205,6 @@ export default function StudentsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => router.push("/dashboard/students/id-cards")}
-          >
-            <IdCard className="h-4 w-4" />
-            ID Cards
-          </Button>
           <Button
             variant="outline"
             className="gap-2"
@@ -368,14 +351,6 @@ export default function StudentsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          title="Copy QR Link"
-                          onClick={() => copyQrLink(student)}
-                        >
-                          <Link className="h-4 w-4 text-blue-600" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

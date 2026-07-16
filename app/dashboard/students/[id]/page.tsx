@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Loader2, Save } from 'lucide-react'
+import { ArrowLeft, Loader2, Save, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ImageUpload } from '@/components/ui/image-upload'
 import { toast } from 'sonner'
@@ -26,6 +26,11 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
 
   const [isLoading, setIsLoading] = useState(!isNew)
   const [isSaving, setIsSaving] = useState(false)
+
+  // Attendance stats
+  const [attendanceStats, setAttendanceStats] = useState<{ month: string; present: number; total: number; percentage: number }[]>([])
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false)
+  const [overallPercentage, setOverallPercentage] = useState<number | null>(null)
 
   // Options
   const [classes, setClasses] = useState<Class[]>([])
@@ -50,7 +55,6 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
     address: '',
     emergency_contact: '',
     is_active: true,
-    studentid: '',
   })
 
   useEffect(() => {
@@ -118,7 +122,6 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
           address: data.address || '',
           emergency_contact: data.emergency_contact || '',
           is_active: data.is_active,
-          studentid: data.studentid || '',
         })
 
         if (!data.admission_no) {
@@ -141,7 +144,58 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
       setIsLoading(false)
     }
     loadData()
+
+    // Load attendance stats if editing
+    if (!isNew) {
+      loadAttendanceStats()
+    }
   }, [id, isNew, router, supabase])
+
+  async function loadAttendanceStats() {
+    setIsLoadingAttendance(true)
+    try {
+      const { data } = await supabase
+        .from('attendance')
+        .select('date, status')
+        .eq('student_id', id)
+        .order('date', { ascending: false })
+
+      if (!data || data.length === 0) {
+        setIsLoadingAttendance(false)
+        return
+      }
+
+      const monthly: Record<string, { present: number; total: number }> = {}
+      let totalPresent = 0
+      const totalDays = data.length
+
+      data.forEach((a: any) => {
+        const monthKey = a.date.substring(0, 7)
+        if (!monthly[monthKey]) monthly[monthKey] = { present: 0, total: 0 }
+        monthly[monthKey].total++
+        if (a.status === 'Present') {
+          monthly[monthKey].present++
+          totalPresent++
+        }
+      })
+
+      const stats = Object.entries(monthly)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([month, d]) => ({
+          month,
+          present: d.present,
+          total: d.total,
+          percentage: Math.round((d.present / d.total) * 100),
+        }))
+
+      setAttendanceStats(stats)
+      setOverallPercentage(totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : null)
+    } catch (e) {
+      console.error('Error loading attendance stats:', e)
+    } finally {
+      setIsLoadingAttendance(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!form.full_name || !form.admission_no) {
@@ -153,7 +207,6 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
       const payload = {
         ...form,
         date_of_birth: form.date_of_birth || null,
-        studentid: form.studentid?.trim() || null,
       }
 
       if (isNew) {
@@ -285,10 +338,11 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
         {/* Right Column: Detailed Forms */}
         <div className="lg:col-span-6">
           <Tabs defaultValue="personal" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
               <TabsTrigger value="contact">Contact & Parents</TabsTrigger>
               <TabsTrigger value="academics">Academics</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal" className="mt-4">
@@ -321,15 +375,6 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="studentid">Student ID (Tag/Barcode)</Label>
-                          <Input
-                            id="studentid"
-                            value={form.studentid}
-                            onChange={e => setForm({ ...form, studentid: e.target.value })}
-                            placeholder="e.g. STU-1001"
-                          />
-                        </div>
 
                         <div className="space-y-2">
                           <Label>Status</Label>
@@ -466,6 +511,81 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
               </Card>
             </TabsContent>
 
+            <TabsContent value="attendance" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Attendance History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingAttendance ? (
+                    <div className="flex justify-center py-10">
+                      <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                    </div>
+                  ) : attendanceStats.length === 0 ? (
+                    <div className="py-10 text-center text-sm text-slate-500">
+                      No attendance records found for this student.
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Overall */}
+                      {overallPercentage !== null && (
+                        <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50">
+                          <div className={`p-3 rounded-full ${
+                            overallPercentage >= 75 ? 'bg-green-100 text-green-700' :
+                            overallPercentage >= 50 ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>
+                            {overallPercentage >= 75 ? <CheckCircle className="h-6 w-6" /> :
+                             overallPercentage >= 50 ? <Clock className="h-6 w-6" /> :
+                             <XCircle className="h-6 w-6" />}
+                          </div>
+                          <div>
+                            <p className="text-2xl font-bold text-slate-900">{overallPercentage}%</p>
+                            <p className="text-sm text-slate-500">Overall Attendance</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Monthly breakdown */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-slate-700">Monthly Breakdown</h4>
+                        {attendanceStats.map(month => (
+                          <div key={month.month} className="flex items-center gap-4 p-3 rounded-lg bg-slate-50">
+                            <div className="w-24 text-sm font-medium text-slate-700">
+                              {new Date(month.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                            </div>
+                            <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  month.percentage >= 75 ? 'bg-green-500' :
+                                  month.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${month.percentage}%` }}
+                              />
+                            </div>
+                            <div className="w-32 text-right">
+                              <span className={`text-sm font-bold ${
+                                month.percentage >= 75 ? 'text-green-700' :
+                                month.percentage >= 50 ? 'text-amber-700' : 'text-red-700'
+                              }`}>{month.percentage}%</span>
+                              <span className="text-xs text-slate-500 ml-2">{month.present}/{month.total}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Legend */}
+                      <div className="flex items-center gap-6 text-xs text-slate-500 pt-2 border-t border-slate-100">
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500" /> Present</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500" /> Late</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-500" /> Absent</span>
+                        <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-500" /> Half-day</span>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </div>

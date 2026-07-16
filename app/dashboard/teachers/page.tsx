@@ -30,7 +30,6 @@ const TEACHER_CSV_COLUMNS: ColumnDef[] = [
   { key: 'address', label: 'Address', required: false, example: '45 Beach Road, Kochi' },
   { key: 'qualification', label: 'Qualification', required: false, example: 'M.Sc Mathematics' },
   { key: 'experience_years', label: 'Experience (Years)', required: false, example: '5' },
-  { key: 'teacherid', label: 'Teacher ID', required: false, example: 'T00202601' },
 ]
 
 export default function TeachersPage() {
@@ -84,9 +83,7 @@ export default function TeachersPage() {
 
   const copyQrLink = (teacher: Teacher) => {
     const baseUrl = "https://sreenandanam-school-website.vercel.app";
-    // Use teacherid if available, fallback to id for the unique identifier in the link
-    const idToUse = teacher.teacherid || teacher.id;
-    const link = `${baseUrl}/s/id-card/teacher/${encodeURIComponent(idToUse)}`;
+    const link = `${baseUrl}/s/id-card/teacher/${encodeURIComponent(teacher.id)}`;
     navigator.clipboard.writeText(link);
     toast.success("Teacher QR Link copied!");
   };
@@ -261,7 +258,7 @@ export default function TeachersPage() {
           address: row.address || null,
           qualification: row.qualification || null,
           experience_years: row.experience_years ? parseInt(row.experience_years, 10) : 0,
-          teacherid: row.teacherid || null,
+
         })}
         onSuccess={fetchAll}
       />

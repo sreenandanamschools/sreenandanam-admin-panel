@@ -69,7 +69,7 @@ export function IDCardForm({
             academic_years (name)
           )
         `)
-        .or(`studentid.eq.${data.idNumber},admission_no.eq.${data.idNumber}`)
+        .eq('admission_no', data.idNumber)
         .maybeSingle();
 
       if (error) {
@@ -78,7 +78,7 @@ export function IDCardForm({
       }
 
       if (!student) {
-        alert("Student not found for the given Student ID / Admission Number.");
+        alert("Student not found for the given Admission Number.");
         return;
       }
 
@@ -88,7 +88,7 @@ export function IDCardForm({
 
       setData({
         ...data,
-        idNumber: student.studentid || student.admission_no || data.idNumber,
+        idNumber: student.admission_no || data.idNumber,
         studentName: student.full_name || '',
         studentPhoto: student.image_url || '',
         bloodGroup: student.blood_group || data.bloodGroup,

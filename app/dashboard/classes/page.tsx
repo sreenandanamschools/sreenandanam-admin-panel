@@ -11,20 +11,25 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { Edit2, Trash2, Plus, Loader2, School } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import type { Class } from '@/lib/supabase/types'
+import type { Class, AcademicYear, Teacher } from '@/lib/supabase/types'
 
 interface ClassWithCount extends Class {
   student_count?: number
 }
 
-const EMPTY_FORM = { class_name: '', section: '' }
+const EMPTY_FORM = { class_name: '', section: '', academic_year_id: '', class_teacher_id: '' }
 
 export default function ClassesPage() {
   const supabase = createClient()
 
   const [classes, setClasses] = useState<ClassWithCount[]>([])
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([])
+  const [teachers, setTeachers] = useState<Teacher[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -39,17 +44,30 @@ export default function ClassesPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const { data: classesData, error: cErr } = await supabase
-        .from('classes')
-        .select('*')
-        .order('class_name')
+      const [
+        { data: classesData, error: cErr },
+        { data: enrollments },
+        { data: yearsData },
+        { data: teachersData },
+      ] = await Promise.all([
+        supabase
+          .from('classes')
+          .select('*, academic_years(name), teachers(first_name, last_name)')
+          .order('class_name'),
+        supabase
+          .from('student_enrollments')
+          .select('class_id')
+          .eq('status', 'active'),
+        supabase
+          .from('academic_years')
+          .select('*')
+          .order('name'),
+        supabase
+          .from('teachers')
+          .select('*')
+          .order('first_name'),
+      ])
       if (cErr) throw cErr
-
-      // Count students per class via active enrollments
-      const { data: enrollments } = await supabase
-        .from('student_enrollments')
-        .select('class_id')
-        .eq('status', 'active')
 
       const countMap: Record<string, number> = {}
       enrollments?.forEach(e => {
@@ -57,6 +75,8 @@ export default function ClassesPage() {
       })
 
       setClasses((classesData || []).map(c => ({ ...c, student_count: countMap[c.id] || 0 })))
+      setAcademicYears(yearsData || [])
+      setTeachers(teachersData || [])
     } catch (e: any) {
       setError(e.message)
     } finally {
@@ -69,7 +89,12 @@ export default function ClassesPage() {
   const openAdd = () => { setEditingId(null); setForm(EMPTY_FORM); setError(null); setDialogOpen(true) }
   const openEdit = (c: Class) => {
     setEditingId(c.id)
-    setForm({ class_name: c.class_name, section: c.section || '' })
+    setForm({
+      class_name: c.class_name,
+      section: c.section || '',
+      academic_year_id: c.academic_year_id || '',
+      class_teacher_id: c.class_teacher_id || '',
+    })
     setError(null)
     setDialogOpen(true)
   }
@@ -78,7 +103,12 @@ export default function ClassesPage() {
     if (!form.class_name.trim()) return
     setIsSaving(true); setError(null)
     try {
-      const payload = { class_name: form.class_name.trim(), section: form.section.trim() || null }
+      const payload = {
+        class_name: form.class_name.trim(),
+        section: form.section.trim() || null,
+        academic_year_id: form.academic_year_id || null,
+        class_teacher_id: form.class_teacher_id || null,
+      }
       if (editingId) {
         const { error } = await supabase.from('classes').update(payload).eq('id', editingId)
         if (error) throw error
@@ -162,6 +192,8 @@ export default function ClassesPage() {
                 <TableRow>
                   <TableHead>Class Name</TableHead>
                   <TableHead>Section</TableHead>
+                  <TableHead>Academic Year</TableHead>
+                  <TableHead>Class Teacher</TableHead>
                   <TableHead>Students</TableHead>
                   <TableHead>Occupancy</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -174,6 +206,10 @@ export default function ClassesPage() {
                     <TableRow key={cls.id}>
                       <TableCell className="font-medium">{cls.class_name}</TableCell>
                       <TableCell className="text-slate-500">{cls.section || '—'}</TableCell>
+                      <TableCell className="text-slate-500">{cls.academic_years?.name || '—'}</TableCell>
+                      <TableCell className="text-slate-500">
+                        {cls.teachers ? `${cls.teachers.first_name} ${cls.teachers.last_name || ''}` : '—'}
+                      </TableCell>
                       <TableCell>{count}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -214,6 +250,36 @@ export default function ClassesPage() {
               <Label htmlFor="section">Section</Label>
               <Input id="section" value={form.section}
                 onChange={e => setForm(f => ({ ...f, section: e.target.value }))} placeholder="e.g. A" />
+            </div>
+            <div className="space-y-1">
+              <Label>Academic Year</Label>
+              <Select
+                value={form.academic_year_id || "none"}
+                onValueChange={v => setForm(f => ({ ...f, academic_year_id: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Select Academic Year" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {academicYears.map(ay => (
+                    <SelectItem key={ay.id} value={ay.id}>{ay.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Class Teacher</Label>
+              <Select
+                value={form.class_teacher_id || "none"}
+                onValueChange={v => setForm(f => ({ ...f, class_teacher_id: v === "none" ? "" : v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Select Class Teacher" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {teachers.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{`${t.first_name} ${t.last_name || ''}`}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
