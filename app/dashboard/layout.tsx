@@ -42,7 +42,7 @@ export default function DashboardLayout({
           collapsed ? 'md:ml-[68px]' : 'md:ml-64'
         }`}
       >
-        <div className="p-6 animate-in fade-in slide-in-from-top-1 duration-300">
+        <div className="p-4 md:p-6 animate-in fade-in slide-in-from-top-1 duration-300">
           {children}
         </div>
       </main>

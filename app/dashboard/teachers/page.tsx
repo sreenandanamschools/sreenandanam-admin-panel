@@ -100,63 +100,63 @@ export default function TeachersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Teachers</h1>
-          <p className="text-slate-600 mt-1">Manage teaching staff</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2" onClick={() => setCsvDialogOpen(true)}>
-            <Upload className="h-4 w-4" />
-            Import CSV
-          </Button>
-          <Button className="gap-2" onClick={() => router.push('/dashboard/teachers/new')}>
-            <Plus className="h-4 w-4" />
-            Add Teacher
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>
-      )}
-
-      {/* Search */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Search by name, email, or subject…"
-            className="pl-10"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Teachers Table */}
-      <div className="bg-white rounded-xl border border-slate-200">
-        <div className="px-6 py-5 border-b border-slate-100">
-          <h3 className="text-sm font-semibold text-slate-900">All Teachers ({filtered.length})</h3>
-        </div>
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
-              <p className="text-sm text-slate-400">Loading teachers...</p>
-            </div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
-              <User className="h-6 w-6 text-slate-300" />
-            </div>
-            <h3 className="text-sm font-medium text-slate-700 mb-1">No teachers found</h3>
-            <p className="text-sm text-slate-500">Try adjusting your search.</p>
-          </div>
-        ) : (
-          <div className="p-0">
-            <Table>
+           <h1 className="text-3xl font-bold text-slate-900">Teachers</h1>
+           <p className="text-slate-600 mt-1">Manage teaching staff</p>
+         </div>
+         <div className="flex gap-2">
+           <Button variant="outline" className="gap-2" onClick={() => setCsvDialogOpen(true)}>
+             <Upload className="h-4 w-4" />
+             Import CSV
+           </Button>
+           <Button className="gap-2" onClick={() => router.push('/dashboard/teachers/new')}>
+             <Plus className="h-4 w-4" />
+             Add Teacher
+           </Button>
+         </div>
+       </div>
+ 
+       {error && (
+         <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">{error}</div>
+       )}
+ 
+       {/* Search */}
+       <div className="bg-white rounded-xl border border-slate-200 p-5">
+         <div className="relative">
+           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+           <Input
+             placeholder="Search by name, email, or subject…"
+             className="pl-10"
+             value={search}
+             onChange={e => setSearch(e.target.value)}
+           />
+         </div>
+       </div>
+ 
+       {/* Teachers Table */}
+       <div className="bg-white rounded-xl border border-slate-200">
+         <div className="px-6 py-5 border-b border-slate-100">
+           <h3 className="text-sm font-semibold text-slate-900">All Teachers ({filtered.length})</h3>
+         </div>
+         {isLoading ? (
+           <div className="flex justify-center py-20">
+             <div className="flex flex-col items-center gap-3">
+               <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+               <p className="text-sm text-slate-400">Loading teachers...</p>
+             </div>
+           </div>
+         ) : filtered.length === 0 ? (
+           <div className="py-16 text-center">
+             <div className="mx-auto w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center mb-4">
+               <User className="h-6 w-6 text-slate-300" />
+             </div>
+             <h3 className="text-sm font-medium text-slate-700 mb-1">No teachers found</h3>
+             <p className="text-sm text-slate-500">Try adjusting your search.</p>
+           </div>
+         ) : (
+           <div className="overflow-x-auto p-0">
+             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Profile</TableHead>

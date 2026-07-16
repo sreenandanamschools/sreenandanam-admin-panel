@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Bell, Search } from 'lucide-react'
@@ -24,10 +25,33 @@ const pageTitles: Record<string, string> = {
 export function Navbar() {
   const pathname = usePathname()
   const title = pageTitles[pathname] || 'Dashboard'
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed')
+    if (saved) setCollapsed(saved === 'true')
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'sidebar-collapsed') {
+        setCollapsed(e.newValue === 'true')
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+
+    const interval = setInterval(() => {
+      const current = localStorage.getItem('sidebar-collapsed')
+      if (current) setCollapsed(current === 'true')
+    }, 500)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      clearInterval(interval)
+    }
+  }, [])
 
   return (
     <header className="border-b border-slate-200 bg-white/80 backdrop-blur-md sticky top-0 z-30">
-      <div className="flex items-center justify-between h-16 px-6 ml-0 md:ml-64 gap-4">
+      <div className={`flex items-center justify-between h-16 pr-6 pl-16 md:px-6 ml-0 transition-all duration-300 gap-4 ${collapsed ? 'md:ml-[68px]' : 'md:ml-64'}`}>
         {/* Left: Page title */}
         <div className="flex items-center gap-3">
           <div>

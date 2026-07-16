@@ -139,7 +139,7 @@ export default function ClassesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Classes</h1>
           <p className="text-slate-600 mt-1">Manage school classes and sections</p>
@@ -186,7 +186,7 @@ export default function ClassesPage() {
             <p className="text-sm text-slate-500">Add your first class to get started.</p>
           </div>
         ) : (
-          <div className="p-0">
+          <div className="overflow-x-auto p-0">
             <Table>
               <TableHeader>
                 <TableRow>

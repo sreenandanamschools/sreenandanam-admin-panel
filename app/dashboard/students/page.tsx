@@ -197,7 +197,7 @@ export default function StudentsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Students</h1>
           <p className="text-slate-600 mt-1">
@@ -291,7 +291,7 @@ export default function StudentsPage() {
             <p className="text-sm text-slate-500">Try adjusting your search or filters.</p>
           </div>
         ) : (
-          <div className="p-0">
+          <div className="overflow-x-auto p-0">
             <Table>
               <TableHeader>
                 <TableRow>

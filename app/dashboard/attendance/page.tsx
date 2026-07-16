@@ -558,7 +558,7 @@ export default function AttendancePage() {
 
                 {/* Summary */}
                 <div className="border-t border-slate-100 p-5">
-                  <div className="grid grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {(Object.keys(counts) as AttendanceStatus[]).map(status => (
                       <div key={status} className="text-center p-3 rounded-lg bg-slate-50">
                         <p className="text-xs text-slate-500 mb-1">{status}</p>
