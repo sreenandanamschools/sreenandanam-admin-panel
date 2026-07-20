@@ -210,20 +210,27 @@ export default function StudentProfilePage({ params }: { params: Promise<{ id: s
       }
 
       if (isNew) {
-        const { data: newStudent, error } = await supabase.from('students').insert(payload).select('id').single()
-        if (error) throw error
-
-        // Create initial enrollment if class and year are selected
-        if (initialClassId && initialYearId && newStudent) {
-          const { error: enrollErr } = await supabase.from('student_enrollments').insert({
-            student_id: newStudent.id,
-            class_id: initialClassId,
-            academic_year_id: initialYearId,
-            roll_no: initialRollNo || null,
-            status: 'active',
-          })
-          if (enrollErr) throw enrollErr
+        if (!initialClassId || !initialYearId) {
+          throw new Error('Class and Academic Year must be selected for a new student.');
         }
+
+        const { error } = await supabase.rpc('create_student_with_enrollment', {
+          p_full_name: payload.full_name,
+          p_admission_no: payload.admission_no,
+          p_class_id: initialClassId,
+          p_academic_year_id: initialYearId,
+          p_gender: payload.gender || null,
+          p_date_of_birth: payload.date_of_birth || null,
+          p_blood_group: payload.blood_group || null,
+          p_parent_name: payload.parent_name || null,
+          p_phone: payload.phone || null,
+          p_email: payload.email || null,
+          p_address: payload.address || null,
+          p_emergency_contact: payload.emergency_contact || null,
+          p_image_url: payload.image_url || null
+        })
+
+        if (error) throw error
 
         toast.success('Student created successfully')
         router.push('/dashboard/students')

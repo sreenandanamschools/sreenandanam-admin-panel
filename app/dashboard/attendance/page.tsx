@@ -115,11 +115,10 @@ export default function AttendancePage() {
 
       let attendanceData: any[] = [];
       if (studentIds.length > 0) {
-        const { data: attData } = await supabase
-          .from('attendance')
-          .select('student_id, status, remarks')
-          .eq('date', selectedDate)
-          .in('student_id', studentIds);
+        const { data: attData } = await supabase.rpc('get_class_attendance_by_date', {
+          p_class_id: selectedClassId,
+          p_date: selectedDate
+        });
         attendanceData = attData || [];
       }
 
